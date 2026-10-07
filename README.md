@@ -15,6 +15,7 @@ The app UI is in Hebrew (RTL).
 - Export to PNG with all dimensions and an area table.
 - Optional Google sign-in (Firebase) to sync sketches across devices.
 - Backup/restore of all sketches to a JSON file.
+- Desktop app: auto-save every sketch to a folder you pick (use a Google Drive / OneDrive / Dropbox folder for a cloud backup).
 - Works offline and installs as a PWA on phones and desktops.
 
 ## Install
@@ -24,6 +25,7 @@ The app UI is in Hebrew (RTL).
 
 ## Where sketches are stored
 - **Without sign-in:** only on the device (browser storage, or the desktop app's own storage).
+- **Desktop app with an auto-save folder:** also as one file per sketch (`<name> (<id>).sirtuti.json`) in the chosen folder, rewritten on every change. Set it in *My sketches* (הסקיצות שלי) → *Auto-save to folder*. If the folder is synced by Google Drive, OneDrive or Dropbox, sketches are backed up to the cloud and shared between computers that use the same folder: new or changed files are picked up when the app opens or regains focus, and deleted files are removed.
 - **Signed in with Google (web app):** on the device and in Firestore under `users/<uid>/sketches`, synced across devices. Works offline and syncs when back online.
 - Google sign-in is not available inside the desktop app (Google blocks sign-in from embedded webviews). Use the installed web app for sync, or move sketches with backup files.
 

@@ -60,6 +60,9 @@ button{cursor:pointer}
 .ib:hover{background:var(--paper)}
 .top .ib.on{color:var(--accent);background:var(--accent-soft)}
 .acct{display:flex;flex-direction:column;gap:2px;background:var(--paper);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.fold{display:flex;flex-direction:column;gap:4px;background:var(--paper);border-radius:10px;padding:10px 12px;margin-top:12px;font-size:13.5px;color:var(--ink-2);line-height:1.45}
+.fold b{color:var(--ink);font-size:14.5px}
+.fpath{font-size:12.5px;word-break:break-all;text-align:right;color:var(--ink)}
 .acct span{color:var(--ink-2);font-size:13.5px;text-align:right}
 .ib:disabled{opacity:.35;cursor:default}
 .ib svg{width:20px;height:20px}
@@ -460,6 +463,63 @@ const local={
   del(id){const o=this.read();if(o.sketches&&o.sketches[id]){delete o.sketches[id];this.write(o);}}
 };
 const plain=s=>clone({name:s.name||'',updated:s.updated||Date.now(),shapes:s.shapes||[]});
+/* ---------- auto-save folder (desktop app) ---------- */
+// Every sketch is mirrored to <folder>/<name> (<id>).sirtuti.json on each change. Picking a folder that
+// Google Drive / OneDrive / Dropbox syncs gives a cloud backup. Files changed or added there are pulled in.
+const folder={
+  K:'sirtuti.folder',M:'sirtuti.folderFiles',warned:false,
+  get path(){try{return localStorage.getItem(this.K)||''}catch(e){return ''}},
+  set path(v){try{v?localStorage.setItem(this.K,v):localStorage.removeItem(this.K)}catch(e){}},
+  map(){try{return JSON.parse(localStorage.getItem(this.M)||'{}')||{}}catch(e){return {}}},
+  setMap(m){try{localStorage.setItem(this.M,JSON.stringify(m))}catch(e){}},
+  fs(){return window.__TAURI__&&window.__TAURI__.fs},
+  supported(){return IS_TAURI&&!!this.fs()&&!!(window.__TAURI__.dialog)},
+  on(){return this.supported()&&!!this.path},
+  join(n){const p=this.path,sep=p.includes('\\')?'\\':'/';return p.replace(/[\\/]+$/,'')+sep+n;},
+  fname(s){const nm=(s.name||'סקיצה').replace(/[\\/:*?"<>|\u0000-\u001f]+/g,' ').trim().slice(0,60)||'סקיצה';return nm+' ('+String(s.id).slice(-6)+').sirtuti.json';},
+  fail(){ if(!this.warned){this.warned=true;toast('השמירה לתיקייה נכשלה. בדוק שהתיקייה קיימת');} },
+  async write(s){
+    if(!this.on()) return;
+    const fs=this.fs(),m=this.map(),n=this.fname(s),old=m[s.id],at=this.path;
+    await fs.writeTextFile(this.join(n),JSON.stringify({app:'sirtuti',format:1,sketch:{id:s.id,...plain(s)}},null,1));
+    if(old&&old!==n){try{await fs.remove(this.join(old));}catch(e){}}
+    m[s.id]=n; this.setMap(m); this.warned=false;
+    const cur=local.all()[s.id]; if(cur&&cur.updated===s.updated&&cur.inFolder!==at){cur.inFolder=at;local.put(cur);}
+  },
+  async remove(id){
+    if(!this.on()) return; const m=this.map(),n=m[id]; if(!n) return;
+    try{await this.fs().remove(this.join(n));}catch(e){}
+    delete m[id]; this.setMap(m);
+  },
+  // read the folder; newer files win; files deleted on another computer remove the local copy
+  async pull(){
+    if(!this.on()) return 0;
+    const fs=this.fs(),at=this.path,ents=await fs.readDir(at),m={},seen=new Set(); let n=0;
+    for(const e of ents){
+      if(!e.isFile||!/\.sirtuti\.json$/i.test(e.name)) continue;
+      try{
+        const d=JSON.parse(await fs.readTextFile(this.join(e.name))),s=d&&d.sketch;
+        if(!s||!s.id||!Array.isArray(s.shapes)) continue;
+        seen.add(s.id); m[s.id]=e.name;
+        const cur=local.all()[s.id];
+        if(!cur||(cur.updated||0)<(s.updated||0)){local.put({id:s.id,...plain(s),inFolder:at});n++;}
+      }catch(err){}
+    }
+    Object.values(local.all()).forEach(s=>{if(s.inFolder===at&&!seen.has(s.id)){local.del(s.id);n++;}});
+    this.setMap(m); return n;
+  },
+  async pushAll(){ for(const s of Object.values(local.all())) await this.write(s); },
+  async choose(){
+    try{
+      const p=await window.__TAURI__.dialog.open({directory:true,multiple:false,recursive:true,title:'בחירת תיקייה לשמירה אוטומטית'});
+      if(!p||Array.isArray(p)) return false;
+      this.path=p; this.setMap({}); this.warned=false;
+      await this.pull(); await this.pushAll();
+      toast('נשמר. כל שינוי יישמר גם בתיקייה'); return true;
+    }catch(e){ this.fail(); return false; }
+  },
+  stop(){ this.path=''; this.setMap({}); toast('השמירה לתיקייה הופסקה. הקבצים שכבר נשמרו נשארים שם'); }
+};
 let syncSt='';
 const store={remote:null,
   get mode(){return this.remote?this.remote.kind:'local'},
@@ -476,6 +536,7 @@ const store={remote:null,
     }catch(e){}
   },
   async list(){
+    if(folder.on()){try{await folder.pull();}catch(e){folder.fail();}}
     const L=local.all(),all={};
     Object.values(L).forEach(s=>{if(s&&Array.isArray(s.shapes)) all[s.id]=s;});
     const r=this.remote;
@@ -494,13 +555,14 @@ const store={remote:null,
   },
   async save(s){
     const body=plain(s),prev=local.all()[s.id];
-    local.put({id:s.id,...body,cloud:prev?prev.cloud:undefined});
+    local.put({...(prev||{}),id:s.id,...body});
+    if(folder.on()) folder.write({id:s.id,...body}).catch(()=>folder.fail());
     const r=this.remote; if(!r) return;
     if(r.kind==='claude'){ await r.save(s.id,body); return; }
     pushCloud(r,s.id,body);   // Firebase: never block on the server (works offline, syncs later)
   },
   async remove(id){
-    local.del(id); const r=this.remote; if(!r) return;
+    local.del(id); if(folder.on()) folder.remove(id); const r=this.remote; if(!r) return;
     const p=r.remove(id); if(r.kind==='claude') await p; else p.catch(()=>{});
   }
 };
@@ -517,7 +579,7 @@ function setStatus(t){$('#status').textContent=t;}
 function savedText(){
   if(store.mode==='claude') return 'נשמר בחשבון שלך';
   if(store.mode==='firebase') return syncSt==='pending'?'נשמר · מסנכרן ל-Google…':syncSt==='err'?'נשמר במכשיר · הסנכרון ל-Google נכשל':'נשמר בחשבון Google';
-  return IS_TAURI?'נשמר במחשב הזה':'נשמר בדפדפן הזה';
+  return IS_TAURI?(folder.on()?'נשמר במחשב ובתיקייה':'נשמר במחשב הזה'):'נשמר בדפדפן הזה';
 }
 function scheduleSave(){
   sk.example=false;sk.updated=Date.now();setStatus('שומר…');
@@ -1027,8 +1089,11 @@ async function showList(){
    <div class="sklist">`+list.map(s=>`<div class="sk${s.id===sk.id?' cur':''}"><div class="meta"><b>${esc(s.name||'ללא שם')}</b><small>${dateStr(s.updated||Date.now())} · ${s.shapes.length} צורות · ${fmt(area(s))} מ״ר</small></div>
      ${s.id===sk.id?'<small style="color:var(--accent)">פתוחה</small>':`<button class="chip" data-open="${s.id}">פתיחה</button>`}
      <button class="chip danger" data-delsk="${s.id}" aria-label="מחיקת סקיצה">${ic('trash')}</button></div>`).join('')+`</div>
+   ${folder.supported()?`<div class="fold"><b>שמירה אוטומטית לתיקייה</b>${folder.path?`<span dir="ltr" class="fpath">${esc(folder.path)}</span><div class="btnrow" style="margin-top:6px"><button class="chip" id="fdPick">החלפת תיקייה</button><button class="chip" id="fdStop">הפסקה</button></div>`:`<span>כל סקיצה תישמר גם כקובץ בתיקייה שתבחר, ותתעדכן בכל שינוי. בחר תיקייה של Google Drive, OneDrive או Dropbox כדי לקבל גיבוי בענן.</span><div class="btnrow" style="margin-top:6px"><button class="primary" id="fdPick">בחירת תיקייה</button></div>`}</div>`:''}
    <div class="btnrow"><button class="primary" id="newSk">סקיצה חדשה</button><button class="chip" id="bkOut">${ic('dl')} גיבוי לקובץ</button><button class="chip" id="bkIn">ייבוא מקובץ</button><input type="file" id="bkFile" accept=".json,application/json" hidden></div>
    <div class="hint">${store.mode==='claude'?'הסקיצות נשמרות בחשבון שלך וזמינות מכל מכשיר.':store.mode==='firebase'?'הסקיצות נשמרות בחשבון Google שלך ומסתנכרנות בין המכשירים.':(IS_TAURI?'הסקיצות נשמרות במחשב הזה.':'הסקיצות נשמרות בדפדפן הזה בלבד.')+(cloud.configured()&&!cloud.user?' התחבר לחשבון Google כדי לשמור אותן גם בענן.':' קובץ גיבוי מאפשר להעביר אותן למכשיר אחר.')}</div>`);
+  if($('#fdPick')) $('#fdPick').onclick=async()=>{ if(await folder.choose()){ setStatus(savedText()); showList(); } };
+  if($('#fdStop')) $('#fdStop').onclick=()=>{ folder.stop(); setStatus(savedText()); showList(); };
   $('#bkOut').onclick=()=>backupOut(list.filter(x=>!x.example));
   $('#bkIn').onclick=()=>$('#bkFile').click();
   $('#bkFile').onchange=e=>{const f=e.target.files&&e.target.files[0]; if(f) backupIn(f);};
@@ -1142,6 +1207,11 @@ $('#expBtn').onclick=async()=>{
 /* ---------- boot ---------- */
 openSketch(sampleSketch());
 $('#acctBtn').onclick=showAcct;
+if(IS_TAURI) window.addEventListener('focus',async()=>{
+  if(!folder.on()||saveT||saving) return;
+  try{ await folder.pull(); const cur=local.all()[sk.id];
+    if(cur&&(cur.updated||0)>(sk.updated||0)&&undoS.length===0) openSketch(clone(cur)); }catch(e){}
+});
 store.initClaude().then(async()=>{
   const list=await store.list();
   if(list.length&&sk.example&&undoS.length===0) openSketch(clone(list[0]));

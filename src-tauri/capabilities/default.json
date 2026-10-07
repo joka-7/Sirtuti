@@ -1,17 +1,19 @@
 {
   "identifier": "default",
-  "description": "Save exported sketches and backups to files the user picks.",
+  "description": "Save exports and backups, and mirror sketches to a folder the user picks (any drive, e.g. a Google Drive folder).",
   "windows": ["main"],
   "permissions": [
     "core:default",
     "dialog:allow-save",
+    "dialog:allow-open",
+    "fs:allow-write-file",
+    "fs:allow-write-text-file",
+    "fs:allow-read-text-file",
+    "fs:allow-read-dir",
+    "fs:allow-remove",
     {
-      "identifier": "fs:allow-write-file",
-      "allow": [{ "path": "$HOME/**" }, { "path": "$DESKTOP/**" }, { "path": "$DOCUMENT/**" }, { "path": "$DOWNLOAD/**" }, { "path": "$PICTURE/**" }]
-    },
-    {
-      "identifier": "fs:allow-write-text-file",
-      "allow": [{ "path": "$HOME/**" }, { "path": "$DESKTOP/**" }, { "path": "$DOCUMENT/**" }, { "path": "$DOWNLOAD/**" }, { "path": "$PICTURE/**" }]
+      "identifier": "fs:scope",
+      "allow": [{ "path": "**" }]
     }
   ]
 }
