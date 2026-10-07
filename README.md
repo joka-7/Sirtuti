@@ -13,6 +13,7 @@ The app UI is in Hebrew (RTL).
 - Drag, rotate, snap to other shapes' corners, duplicate, undo/redo, bring to front / send to back.
 - Area and perimeter per shape (each can be hidden), an area summary that can be copied as text.
 - Export to PNG with all dimensions and an area table.
+- **Project documents:** notes-style site-visit summaries with client, address and date, headings, text (lines starting with `-` become bullets), checklists, sketches placed inline, and an automatic area summary across all sketches in the document. Tap a sketch to edit it and return to the document. Export to Word (`.docx`, right-to-left) with the sketches as images.
 - Optional Google sign-in (Firebase) to sync sketches across devices.
 - Backup/restore of all sketches to a JSON file.
 - Desktop app: auto-save every sketch to a folder you pick (use a Google Drive / OneDrive / Dropbox folder for a cloud backup).
@@ -24,6 +25,7 @@ The app UI is in Hebrew (RTL).
 - **Desktop app:** download the installer for Windows (`.msi` / `.exe`), macOS (`.dmg`) or Linux (`.AppImage` / `.deb`) from Releases. The builds are not code-signed, so Windows SmartScreen and macOS Gatekeeper will warn on first launch (macOS: right-click the app → *Open*).
 
 ## Where sketches are stored
+- Project documents are stored the same way as sketches (same sync, folder and backup), as entries with `kind: "project"`.
 - **Without sign-in:** only on the device (browser storage, or the desktop app's own storage).
 - **Desktop app with an auto-save folder:** also as one file per sketch (`<name> (<id>).sirtuti.json`) in the chosen folder, rewritten on every change. Set it in *My sketches* (הסקיצות שלי) → *Auto-save to folder*. If the folder is synced by Google Drive, OneDrive or Dropbox, sketches are backed up to the cloud and shared between computers that use the same folder: new or changed files are picked up when the app opens or regains focus, and deleted files are removed.
 - **Signed in with Google (web app):** on the device and in Firestore under `users/<uid>/sketches`, synced across devices. Works offline and syncs when back online.
@@ -47,11 +49,12 @@ web/                         The app (static, no build step)
   index.html                 Entire UI: HTML, CSS and JS
   firebase-config.js         Firebase web config (null = no sign-in)
   vendor/firebase.js         Bundled Firebase SDK (auth + firestore)
+  vendor/docx.js             Bundled docx library for Word export
   sw.js                      Service worker for offline use
   manifest.webmanifest       PWA manifest
   icons/
 src-tauri/                   Desktop app (Tauri 2) wrapping web/
-tools/firebase-entry.js      Entry for the Firebase bundle
+tools/*-entry.js             Entries for the vendor bundles
 firestore.rules              Firestore security rules
 .github/workflows/
   pages.yml                  Deploys web/ to GitHub Pages on push to main
@@ -64,6 +67,7 @@ npm install
 npm run dev                  # serve web/ at http://localhost:8000
 npm run tauri dev            # run the desktop app (needs Rust + Tauri prerequisites)
 npm run build:firebase       # rebuild web/vendor/firebase.js after upgrading firebase
+npm run build:docx           # rebuild web/vendor/docx.js after upgrading docx
 ```
 Tauri prerequisites: https://v2.tauri.app/start/prerequisites/
 

@@ -185,6 +185,55 @@ tfoot td{font-weight:700;border-bottom:0}
 .primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:9px 14px;font-weight:500}
 .expimg{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--board);padding:9px 16px;border-radius:999px;font-size:14px;z-index:30;pointer-events:none;max-width:90vw;text-align:center}
+
+/* project document */
+.docv{position:fixed;inset:0;z-index:12;background:var(--paper);display:grid;grid-template-rows:auto 1fr;padding-top:env(safe-area-inset-top,0px)}
+.docv .top .chip{flex:none}
+.dscroll{overflow:auto;min-height:0;padding-inline:16px;padding-block:18px 120px}
+.dpage{max-width:760px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding-block:22px 28px;padding-inline:clamp(16px,4vw,40px);display:flex;flex-direction:column;gap:18px}
+.dmeta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.dmeta label{display:flex;flex-direction:column;gap:3px;min-width:0}
+.dmeta span{font-size:12px;color:var(--ink-2);letter-spacing:.02em}
+.dmeta input{border:0;border-bottom:1px solid var(--line);background:transparent;padding:6px 0;font-size:15.5px;min-width:0;width:100%}
+.dmeta input:focus{outline:none;border-bottom-color:var(--accent)}
+.blocks{display:flex;flex-direction:column;gap:4px}
+.blk{position:relative;border-radius:8px;padding:4px 6px;margin-inline:-6px}
+.blk:focus-within,.blk:hover{background:var(--paper)}
+.bctl{position:absolute;top:-16px;inset-inline-end:6px;z-index:2;display:none;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:2px;box-shadow:0 2px 8px rgba(20,28,38,.12)}
+.blk:focus-within .bctl{display:flex}
+@media (hover:hover){.blk:hover .bctl{display:flex}}
+.bctl button{border:0;background:transparent;color:var(--ink-2);width:30px;height:30px;border-radius:6px;display:grid;place-items:center;font-size:12px}
+.bctl button:hover{background:var(--line);color:var(--ink)}
+.bctl button.armed{width:auto;padding-inline:8px;background:var(--danger);color:#fff}
+.bctl svg{width:16px;height:16px}
+.bh,.bp,.bt{border:0;background:transparent;width:100%;min-width:0;font-family:var(--font);color:var(--ink);padding:4px 0}
+.bh{font-size:20px;font-weight:700;text-wrap:balance}
+.bp{font-size:15.5px;line-height:1.6;resize:none;overflow:hidden;display:block}
+.bh:focus,.bp:focus,.bt:focus{outline:none}
+.btodo{display:flex;align-items:center;gap:10px}
+.btodo input[type=checkbox]{width:19px;height:19px;accent-color:var(--accent);flex:none;margin:0}
+.bt{font-size:15.5px}.bt.done{text-decoration:line-through;color:var(--ink-2)}
+.bsk{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;padding:0;width:100%;text-align:right;cursor:pointer}
+.bsk:hover{border-color:var(--accent)}
+.bsk img{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;background:#fff}
+.bsk .cap{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 12px;background:var(--paper);border-top:1px solid var(--line);color:var(--ink);font-size:14px}
+.bsk .cap span{color:var(--ink-2);font-variant-numeric:tabular-nums}
+.bsk .cap .ed{margin-inline-start:auto;color:var(--accent);display:inline-flex;gap:4px;align-items:center}
+.bsk .cap svg{width:15px;height:15px}
+.bmiss{border:1px dashed var(--line);border-radius:10px;padding:14px;color:var(--ink-2);text-align:center}
+.bareas{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.bat{font-weight:700;margin-bottom:6px}
+.bareas tr.sub td{font-weight:500;color:var(--ink-2)}
+.bareas tr.grp td{font-weight:700;background:var(--paper);border-bottom:0;padding-top:10px}
+.addbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-top:14px;border-top:1px dashed var(--line);color:var(--ink-2);font-size:13px}
+.chip.accent{border-color:var(--accent);color:var(--accent)}
+.chip svg{width:15px;height:15px}
+.backdoc{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:4;display:inline-flex;gap:6px;align-items:center;max-width:calc(100% - 32px);background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:8px 14px;font-weight:500;box-shadow:0 4px 14px rgba(196,80,26,.3)}
+.backdoc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.backdoc svg{width:16px;height:16px;transform:rotate(90deg)}
+.tabs{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.tabs button{flex:1;border:0;background:var(--board);padding:9px;font-size:14.5px}
+.tabs button.on{background:var(--accent);color:var(--accent-ink);font-weight:500}
 @media (max-width:420px){ .top{gap:4px;padding-inline:12px} .ib{width:34px} .total{padding:3px 7px} }
 @media (prefers-reduced-motion:no-preference){ .sheet{animation:up .18s ease-out} @keyframes up{from{transform:translateY(24px);opacity:.6}} }
 @media (min-width:900px){ .sheet{animation:none} }
@@ -210,6 +259,7 @@ tfoot td{font-weight:700;border-bottom:0}
     <aside class="sheet" id="sheet" hidden></aside>
     <div class="boardwrap" id="wrap">
       <svg id="board" xmlns="http://www.w3.org/2000/svg"></svg>
+      <button class="backdoc" id="backDoc" hidden></button>
       <div class="scalebar" id="scalebar"><i></i><span></span></div>
       <div class="empty" id="empty" hidden><div><b>הלוח ריק</b>לחץ על „הוספת צורה" או „שרטוט ידני" כדי להתחיל</div></div>
       <div class="dock" id="dock">
@@ -233,6 +283,15 @@ tfoot td{font-weight:700;border-bottom:0}
     </div>
   </div>
 </div>
+<section class="docv" id="docv" dir="rtl" hidden>
+  <header class="top">
+    <button class="ib" id="docBack" title="לוח השרטוט" aria-label="חזרה ללוח השרטוט"></button>
+    <div class="titlebox"><input id="docTitle" aria-label="שם הפרויקט"><span class="status" id="docStatus"></span></div>
+    <button class="chip" id="docWord" title="ייצוא ל-Word"></button>
+    <button class="ib" id="docList" title="הסקיצות והמסמכים שלי" aria-label="הסקיצות והמסמכים שלי"></button>
+  </header>
+  <div class="dscroll"><div class="dpage" id="dpage"></div></div>
+</section>
 <div id="modal" class="modal" hidden></div>
 <div id="toast" class="toast" hidden></div>
 
@@ -255,6 +314,7 @@ const ICON={
  cw:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
  ccw:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+ right:'<path d="m9 18 6-6-6-6"/>',
  pen:'<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
  up:'<path d="m18 15-6-6-6 6"/>', down:'<path d="m6 9 6 6 6-6"/>'
 };
@@ -263,6 +323,7 @@ $('#undoBtn').innerHTML=ic('undo');$('#acctBtn').innerHTML=ic('user');$('#redoBt
 $('#magBtn').innerHTML=ic('mag');$('#zinBtn').innerHTML=ic('plus');$('#zoutBtn').innerHTML=ic('minus');$('#fitBtn').innerHTML=ic('fit');
 $('#addBtn').innerHTML=ic('plus')+'<span>הוספת צורה</span>';
 $('#drawBtn').innerHTML=ic('pen')+'<span>שרטוט ידני</span>';
+$('#docBack').innerHTML=ic('right');$('#docList').innerHTML=ic('folder');$('#docWord').innerHTML=ic('dl')+'<span>Word</span>';
 
 const PALETTE=['#2f6fb0','#1f8a7a','#c27c12','#b5485d','#6b5bb5','#4f6272'];
 const KIND_LABEL={rect:'מלבן / ריבוע',tri:'משולש',trap:'טרפז',reg:'מצולע משוכלל',L:'צורת L',free:'מצולע חופשי',circle:'עיגול',line:'קו מידה'};
@@ -462,7 +523,8 @@ const local={
   put(s){const o=this.read();o.sketches=o.sketches||{};o.sketches[s.id]=s;this.write(o);},
   del(id){const o=this.read();if(o.sketches&&o.sketches[id]){delete o.sketches[id];this.write(o);}}
 };
-const plain=s=>clone({name:s.name||'',updated:s.updated||Date.now(),shapes:s.shapes||[]});
+const plain=s=>clone({name:s.name||'',updated:s.updated||Date.now(),shapes:s.shapes||[],...(s.kind==='project'?{kind:'project',meta:s.meta||{},blocks:s.blocks||[]}:{})});
+const isProj=x=>!!x&&x.kind==='project';
 /* ---------- auto-save folder (desktop app) ---------- */
 // Every sketch is mirrored to <folder>/<name> (<id>).sirtuti.json on each change. Picking a folder that
 // Google Drive / OneDrive / Dropbox syncs gives a cloud backup. Files changed or added there are pulled in.
@@ -627,7 +689,7 @@ const cloud={fb:null,auth:null,fs:null,user:null,failed:false,
       Object.values(local.all()).forEach(s=>{ if(s.cloud===id) return; const c=cm[s.id];
         if(!c||(c.updated||0)<(s.updated||0)) pushCloud(r,s.id,plain(s)); });
     }catch(e){}
-    const list=await store.list();
+    const list=(await store.list()).filter(x=>!isProj(x));
     if(sk.example&&undoS.length===0&&list.length) openSketch(clone(list[0]));
     else if(!sk.example){ store.save(sk); setStatus(savedText()); }
   },
@@ -1062,8 +1124,8 @@ modalEl.addEventListener('click',e=>{
 let toastT;function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600);}
 
 /* ---------- summary ---------- */
-function rowsData(){
-  return sk.shapes.filter(s=>!isOpen(s)).map(s=>{const m=measures(s,geom(s));return {name:s.name||SHORT[s.kind],kind:SHORT[s.kind],area:m.area,per:m.per,inc:s.include!==false};});
+function rowsData(sx=sk){
+  return sx.shapes.filter(s=>!isOpen(s)).map(s=>{const m=measures(s,geom(s));return {name:s.name||SHORT[s.kind],kind:SHORT[s.kind],area:m.area,per:m.per,inc:s.include!==false};});
 }
 $('#totalBtn').onclick=()=>{
   const rows=rowsData(),tot=rows.filter(r=>r.inc).reduce((t,r)=>t+r.area,0);
@@ -1081,11 +1143,11 @@ $('#totalBtn').onclick=()=>{
 
 /* ---------- sketches list ---------- */
 async function showList(){
-  modal(`<h2>הסקיצות שלי<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2><div class="hint">טוען…</div>`);
-  const list=await store.list();
+  modal(`<h2>הסקיצות שלי<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>${listTabs('sk')}<div class="hint">טוען…</div>`);
+  const all=await store.list(),list=all.filter(x=>!isProj(x));
   if(sk.example&&!list.find(x=>x.id===sk.id)) list.unshift(sk);
   const area=s=>s.shapes.filter(x=>!isOpen(x)&&x.include!==false).reduce((t,x)=>t+measures(x,geom(x)).area,0);
-  modal(`<h2>הסקיצות שלי<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>
+  modal(`<h2>הסקיצות שלי<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>${listTabs('sk')}
    <div class="sklist">`+list.map(s=>`<div class="sk${s.id===sk.id?' cur':''}"><div class="meta"><b>${esc(s.name||'ללא שם')}</b><small>${dateStr(s.updated||Date.now())} · ${s.shapes.length} צורות · ${fmt(area(s))} מ״ר</small></div>
      ${s.id===sk.id?'<small style="color:var(--accent)">פתוחה</small>':`<button class="chip" data-open="${s.id}">פתיחה</button>`}
      <button class="chip danger" data-delsk="${s.id}" aria-label="מחיקת סקיצה">${ic('trash')}</button></div>`).join('')+`</div>
@@ -1094,19 +1156,20 @@ async function showList(){
    <div class="hint">${store.mode==='claude'?'הסקיצות נשמרות בחשבון שלך וזמינות מכל מכשיר.':store.mode==='firebase'?'הסקיצות נשמרות בחשבון Google שלך ומסתנכרנות בין המכשירים.':(IS_TAURI?'הסקיצות נשמרות במחשב הזה.':'הסקיצות נשמרות בדפדפן הזה בלבד.')+(cloud.configured()&&!cloud.user?' התחבר לחשבון Google כדי לשמור אותן גם בענן.':' קובץ גיבוי מאפשר להעביר אותן למכשיר אחר.')}</div>`);
   if($('#fdPick')) $('#fdPick').onclick=async()=>{ if(await folder.choose()){ setStatus(savedText()); showList(); } };
   if($('#fdStop')) $('#fdStop').onclick=()=>{ folder.stop(); setStatus(savedText()); showList(); };
-  $('#bkOut').onclick=()=>backupOut(list.filter(x=>!x.example));
+  $('#bkOut').onclick=()=>backupOut(all.filter(x=>!x.example));
   $('#bkIn').onclick=()=>$('#bkFile').click();
   $('#bkFile').onchange=e=>{const f=e.target.files&&e.target.files[0]; if(f) backupIn(f);};
-  $('#newSk').onclick=()=>{ openSketch(newSketch()); closeModal(); scheduleSave(); };
-  modalEl.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const s=list.find(x=>x.id===b.dataset.open); openSketch(JSON.parse(JSON.stringify(s))); closeModal();});
+  $('#newSk').onclick=async()=>{ await closeDoc(); docReturn=null; $('#backDoc').hidden=true; openSketch(newSketch()); closeModal(); scheduleSave(); };
+  modalEl.querySelectorAll('[data-open]').forEach(b=>b.onclick=async()=>{const s=list.find(x=>x.id===b.dataset.open); await closeDoc(); docReturn=null; $('#backDoc').hidden=true; openSketch(JSON.parse(JSON.stringify(s))); closeModal();});
   modalEl.querySelectorAll('[data-delsk]').forEach(b=>b.onclick=async()=>{
     if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='למחוק?';return;}
     const id=b.dataset.delsk; try{await store.remove(id);}catch(_){toast('המחיקה נכשלה');return;}
-    if(id===sk.id){ const rest=(await store.list()).filter(x=>x.id!==id); openSketch(rest[0]?JSON.parse(JSON.stringify(rest[0])):newSketch()); }
+    if(id===sk.id){ const rest=(await store.list()).filter(x=>x.id!==id&&!isProj(x)); openSketch(rest[0]?JSON.parse(JSON.stringify(rest[0])):newSketch()); }
     showList();
   });
 }
 $('#listBtn').onclick=showList;
+$('#listBtn').title='הסקיצות והמסמכים שלי';$('#listBtn').setAttribute('aria-label','הסקיצות והמסמכים שלי');
 function openSketch(s){
   sk=s; sk.shapes.forEach(x=>{if(!x.id)x.id=uid();});
   sel=null; $('#skname').value=sk.name||''; sheet.hidden=true; mainEl.classList.remove('has-panel'); if(draw){draw=null;updDrawBar();} $('#addGroup').hidden=false;
@@ -1115,16 +1178,18 @@ function openSketch(s){
 }
 
 /* ---------- export ---------- */
-function exportSVG(){
-  if(!sk.shapes.length) return null;
+function exportSVG(sx=sk,o={}){
+  const hd=o.header!==false,tb=o.table!==false,ft=o.foot!==false;
+  const efs=o.fs||21;
+  if(!sx.shapes.length) return null;
   let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
-  sk.shapes.forEach(s=>geom(s).w.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}));
-  const Wd=1400,pad=70,head=130,bw=Math.max(x1-x0,.5),bh=Math.max(y1-y0,.5);
+  sx.shapes.forEach(s=>geom(s).w.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}));
+  const Wd=1400,pad=70,head=hd?130:10,bw=Math.max(x1-x0,.5),bh=Math.max(y1-y0,.5);
   const k=Math.min((Wd-2*pad)/bw,1000/bh),dh=bh*k+2*pad;
-  const rows=rowsData(),tot=rows.filter(r=>r.inc).reduce((t,r)=>t+r.area,0);
-  const tH=rows.length?90+(rows.length+1)*42:0, Hd=Math.round(head+dh+tH+60);
+  const rows=rowsData(sx),tot=rows.filter(r=>r.inc).reduce((t,r)=>t+r.area,0);
+  const tH=tb&&rows.length?90+(rows.length+1)*42:0, Hd=Math.round(head+dh+tH+(ft?60:10));
   const T={k,ox:pad+((Wd-2*pad)-bw*k)/2-x0*k,oy:head+pad-y0*k};
-  let b='',l='';sk.shapes.forEach(s=>{const o=shapeSVG(s,T,{fs:21,exp:true});b+=o.body;l+=o.lab;});
+  let b='',l='';sx.shapes.forEach(s=>{const o=shapeSVG(s,T,{fs:efs,exp:true});b+=o.body;l+=o.lab;});
   const R=Wd-pad;
   let g=`<svg xmlns="http://www.w3.org/2000/svg" width="${Wd}" height="${Hd}" viewBox="0 0 ${Wd} ${Hd}"><style>
   text{font-family:Rubik,Arial,"Noto Sans Hebrew",sans-serif}
@@ -1132,17 +1197,18 @@ function exportSVG(){
   .ca{fill:#b44612;stroke:#fff;paint-order:stroke;font-weight:700}.cp{fill:#5d6774;stroke:#fff;paint-order:stroke}
   .h1{font-size:40px;font-weight:700;fill:#1c232d}.h2{font-size:20px;fill:#5d6774}.th{font-size:19px;fill:#5d6774}.td{font-size:21px;fill:#1c232d}.tb{font-size:22px;font-weight:700;fill:#1c232d}
   </style><rect width="100%" height="100%" fill="#ffffff"/>
-  <text class="h1" x="${R}" y="62" direction="rtl" text-anchor="start">${esc(sk.name||'סקיצה')}</text>
+`+(hd?`<text class="h1" x="${R}" y="62" direction="rtl" text-anchor="start">${esc(sx.name||'סקיצה')}</text>
   <text class="h2" x="${R}" y="100" direction="rtl" text-anchor="start">${dateStr(Date.now())} · מידות במטרים · סה״כ שטח ${fmt(tot)} מ״ר</text>
-  <line x1="${pad}" y1="${head-8}" x2="${R}" y2="${head-8}" stroke="#d8dcd3" stroke-width="2"/>`+b+l;
-  if(rows.length){
+  <line x1="${pad}" y1="${head-8}" x2="${R}" y2="${head-8}" stroke="#d8dcd3" stroke-width="2"/>`:'')+b+l;
+  if(tb&&rows.length){
     let y=head+dh+40; const cols=[R,R-460,R-760,R-1010];
     g+=`<line x1="${pad}" y1="${y-30}" x2="${R}" y2="${y-30}" stroke="#d8dcd3" stroke-width="2"/>`;
     ['שם','צורה','שטח (מ״ר)','היקף (מ׳)'].forEach((t,i)=>g+=`<text class="th" x="${cols[i]}" y="${y}" direction="rtl" text-anchor="start">${t}</text>`);
     rows.forEach(r=>{y+=42;g+=`<text class="td" x="${cols[0]}" y="${y}" direction="rtl" text-anchor="start"${r.inc?'':' fill-opacity=".55"'}>${esc(r.name)}${r.inc?'':' (לא נספר)'}</text><text class="td" x="${cols[1]}" y="${y}" direction="rtl" text-anchor="start">${r.kind}</text><text class="td" x="${cols[2]}" y="${y}" direction="rtl" text-anchor="start">${fmt(r.area)}</text><text class="td" x="${cols[3]}" y="${y}" direction="rtl" text-anchor="start">${fmt(r.per)}</text>`;});
     y+=46; g+=`<line x1="${pad}" y1="${y-32}" x2="${R}" y2="${y-32}" stroke="#1c232d" stroke-width="1.5"/><text class="tb" x="${cols[0]}" y="${y}" direction="rtl" text-anchor="start">סה״כ</text><text class="tb" x="${cols[2]}" y="${y}" direction="rtl" text-anchor="start">${fmt(tot)}</text>`;
   }
-  g+=`<text class="h2" x="${R}" y="${Hd-24}" direction="rtl" text-anchor="start" font-size="16">סקיצה להערכה בלבד, אינה מדידה מדויקת</text></svg>`;
+  if(ft) g+=`<text class="h2" x="${R}" y="${Hd-24}" direction="rtl" text-anchor="start" font-size="16">סקיצה להערכה בלבד, אינה מדידה מדויקת</text>`;
+  g+='</svg>';
   return {svg:g,w:Wd,h:Hd};
 }
 const dlP=(window.claude&&window.claude.use)?window.claude.use('downloads').catch(()=>null):Promise.resolve(null);
@@ -1204,6 +1270,232 @@ $('#expBtn').onclick=async()=>{
   }catch(e){ toast('יצירת התמונה נכשלה'); }
 };
 
+/* ---------- project documents ---------- */
+// A project is stored like a sketch (same store, sync, folder, backup) with kind:'project'.
+// blocks: {t:'h'|'p'|'todo'|'sk'|'areas', v?:text, done?:bool, id?:sketchId}
+const docv=$('#docv'),dpage=$('#dpage');
+let doc=null,docSaveT=null,curBlk=-1,docReturn=null;
+const VIEW_K='sirtuti.view';
+const setView=v=>{try{v?localStorage.setItem(VIEW_K,v):localStorage.removeItem(VIEW_K)}catch(e){}};
+const getView=()=>{try{return localStorage.getItem(VIEW_K)||''}catch(e){return ''}};
+const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const fmtDate=iso=>{if(!iso)return '';const [y,m,d]=iso.split('-');return d&&m&&y?`${+d}.${+m}.${y}`:iso;};
+function newProject(){
+  return {id:'p'+uid(),kind:'project',name:'פרויקט חדש',meta:{client:'',address:'',date:todayISO()},
+    blocks:[{t:'h',v:'סיכום ביקור'},{t:'p',v:''}],shapes:[],updated:Date.now()};
+}
+const skById=id=>{const s=local.all()[id];return s&&!isProj(s)?s:(sk&&sk.id===id?sk:null);};
+const skArea=s=>rowsData(s).filter(r=>r.inc).reduce((t,r)=>t+r.area,0);
+function docSketchIds(){const seen=new Set(),out=[];(doc.blocks||[]).forEach(b=>{if(b.t==='sk'&&b.id&&!seen.has(b.id)){seen.add(b.id);out.push(b.id);}});return out;}
+function areasData(){
+  const groups=docSketchIds().map(id=>{const s=skById(id);if(!s)return null;const rows=rowsData(s).filter(r=>r.inc);
+    return {name:s.name||'סקיצה',rows,total:rows.reduce((t,r)=>t+r.area,0)};}).filter(Boolean);
+  return {groups,total:groups.reduce((t,g)=>t+g.total,0)};
+}
+function previewSrc(s){const ex=exportSVG(s,{header:false,table:false,foot:false,fs:28});return ex?'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ex.svg):'';}
+
+function blockHTML(b,i){
+  const ctl=`<div class="bctl"><button data-mv="-1" aria-label="למעלה">${ic('up')}</button><button data-mv="1" aria-label="למטה">${ic('down')}</button><button data-rm aria-label="מחיקה">${ic('x')}</button></div>`;
+  let c='';
+  switch(b.t){
+    case 'h': c=`<input class="bh" id="b${i}" data-f="v" value="${esc(b.v)}" placeholder="כותרת">`; break;
+    case 'p': c=`<textarea class="bp" id="b${i}" data-f="v" rows="1" placeholder="כתוב כאן… (שורה שמתחילה ב- „-" תהיה רשימה)">${esc(b.v)}</textarea>`; break;
+    case 'todo': c=`<div class="btodo"><input type="checkbox" id="c${i}" data-f="done" ${b.done?'checked':''} aria-label="בוצע"><input class="bt${b.done?' done':''}" id="b${i}" data-f="v" value="${esc(b.v)}" placeholder="משימה"></div>`; break;
+    case 'sk': { const s=skById(b.id);
+      c=s?`<button class="bsk" data-edit="${esc(b.id)}"><img alt="${esc(s.name)}" src="${previewSrc(s)}"><span class="cap"><b>${esc(s.name||'סקיצה')}</b><span>${fmt(skArea(s))} מ״ר</span><span class="ed">${ic('pen')} עריכת הסקיצה</span></span></button>`
+        :`<div class="bmiss">הסקיצה נמחקה</div>`; break; }
+    case 'areas': { const a=areasData();
+      c=`<div class="bareas"><div class="bat">סיכום שטחים</div>`+(a.groups.length?`<div class="tbl"><table><thead><tr><th>פריט</th><th class="n">שטח (מ״ר)</th></tr></thead><tbody>`+
+        a.groups.map(g=>`<tr class="grp"><td colspan="2">${esc(g.name)}</td></tr>`+g.rows.map(r=>`<tr><td>${esc(r.name)}</td><td class="n">${fmt(r.area)}</td></tr>`).join('')+
+          (a.groups.length>1?`<tr class="sub"><td>סה״כ</td><td class="n">${fmt(g.total)}</td></tr>`:'')).join('')+
+        `</tbody><tfoot><tr><td>סה״כ${a.groups.length>1?' בפרויקט':''}</td><td class="n">${fmt(a.total)}</td></tr></tfoot></table></div>`
+        :`<div class="hint">הטבלה תתמלא אוטומטית מהסקיצות שבמסמך.</div>`)+`</div>`; break; }
+  }
+  return `<div class="blk blk-${b.t}" data-i="${i}">${c}${ctl}</div>`;
+}
+function renderDoc(focusI){
+  const m=doc.meta||(doc.meta={});
+  $('#docTitle').value=doc.name||'';
+  dpage.innerHTML=`<div class="dmeta">
+      <label><span>לקוח</span><input id="dm-client" data-m="client" value="${esc(m.client)}" placeholder="שם הלקוח"></label>
+      <label><span>כתובת</span><input id="dm-address" data-m="address" value="${esc(m.address)}" placeholder="כתובת"></label>
+      <label><span>תאריך</span><input id="dm-date" data-m="date" type="date" value="${esc(m.date)}"></label>
+    </div><div class="blocks">${doc.blocks.map(blockHTML).join('')}</div>
+    <div class="addbar"><span>הוספה:</span>
+      <button class="chip" data-add="h">כותרת</button><button class="chip" data-add="p">טקסט</button>
+      <button class="chip" data-add="todo">משימה</button><button class="chip accent" data-add="sk">${ic('pen')} סקיצה</button>
+      <button class="chip" data-add="areas">סיכום שטחים</button></div>`;
+  dpage.querySelectorAll('textarea.bp').forEach(autoGrow);
+  if(focusI!=null){const f=$('#b'+focusI);if(f){f.focus();try{const L=f.value.length;f.setSelectionRange(L,L);}catch(e){}}}
+}
+function autoGrow(t){t.style.height='auto';t.style.height=(t.scrollHeight+2)+'px';}
+function docStatus(t){$('#docStatus').textContent=t;}
+function scheduleDocSave(){ docStatus('שומר…'); clearTimeout(docSaveT); docSaveT=setTimeout(saveDocNow,600); }
+async function saveDocNow(){
+  if(!doc) return; clearTimeout(docSaveT); docSaveT=null;
+  doc.updated=Date.now();
+  try{ await store.save(doc); docStatus(savedText()); }catch(e){ docStatus('השמירה נכשלה'); }
+}
+function insertBlock(b,after){
+  const i=(after!=null&&after>=0&&after<doc.blocks.length)?after+1:doc.blocks.length;
+  doc.blocks.splice(i,0,b); curBlk=i; scheduleDocSave(); renderDoc(['h','p','todo'].includes(b.t)?i:null); return i;
+}
+function openDoc(p){
+  doc=clone(p); doc.blocks=doc.blocks||[]; curBlk=-1; docReturn=null; $('#backDoc').hidden=true;
+  renderDoc(); docStatus(savedText()); docv.hidden=false; setView(doc.id); closeModal();
+}
+async function closeDoc(){ if(!doc) return; if(docSaveT) await saveDocNow(); docv.hidden=true; doc=null; setView(''); }
+async function flushSketch(){ if(saveT){clearTimeout(saveT);saveT=null;await doSave();} else if(saving){await new Promise(r=>setTimeout(r,300));} }
+async function editSketchFromDoc(id){
+  const s=skById(id); if(!s){toast('הסקיצה לא נמצאה');return;}
+  if(docSaveT) await saveDocNow();
+  docReturn=doc.id; const title=doc.name||'המסמך';
+  docv.hidden=true; setView(''); openSketch(clone(s));
+  $('#backDoc').innerHTML=`${ic('up')}<span>חזרה למסמך: ${esc(title)}</span>`; $('#backDoc').hidden=false;
+}
+$('#backDoc').onclick=async()=>{
+  await flushSketch(); const p=local.all()[docReturn]; $('#backDoc').hidden=true;
+  if(p) openDoc(p); else docReturn=null;
+};
+function pickSketchForDoc(after){
+  const list=Object.values(local.all()).filter(s=>!isProj(s)&&!s.example).sort((a,b)=>(b.updated||0)-(a.updated||0));
+  modal(`<h2>הוספת סקיצה למסמך<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>
+    <div class="btnrow" style="margin:0 0 12px"><button class="primary" id="skNewForDoc">${ic('plus')} סקיצה חדשה</button></div>
+    ${list.length?`<div class="hint" style="margin-bottom:6px">או בחר סקיצה קיימת:</div><div class="sklist">`+list.map(s=>`<div class="sk"><div class="meta"><b>${esc(s.name||'ללא שם')}</b><small>${dateStr(s.updated||Date.now())} · ${fmt(skArea(s))} מ״ר</small></div><button class="chip" data-pick="${esc(s.id)}">הוספה</button></div>`).join('')+`</div>`:''}`);
+  $('#skNewForDoc').onclick=async()=>{
+    const n=docSketchIds().length+1,s=newSketch(); s.name=(doc.name||'פרויקט')+' – סקיצה '+n; s.updated=Date.now();
+    await store.save(s); insertBlock({t:'sk',id:s.id},after); closeModal(); editSketchFromDoc(s.id);
+  };
+  modalEl.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{insertBlock({t:'sk',id:b.dataset.pick},after);closeModal();});
+}
+// editing
+dpage.addEventListener('focusin',e=>{const bl=e.target.closest('.blk');if(bl)curBlk=+bl.dataset.i;});
+dpage.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.m){ doc.meta[t.dataset.m]=t.value; scheduleDocSave(); return; }
+  const bl=t.closest('.blk'); if(!bl) return; const b=doc.blocks[+bl.dataset.i];
+  if(t.dataset.f==='v'){ b.v=t.value; if(t.tagName==='TEXTAREA') autoGrow(t); }
+  else if(t.dataset.f==='done'){ b.done=t.checked; const x=bl.querySelector('.bt'); if(x) x.classList.toggle('done',b.done); }
+  scheduleDocSave();
+});
+dpage.addEventListener('keydown',e=>{
+  const t=e.target,bl=t.closest&&t.closest('.blk'); if(!bl||t.dataset.f!=='v') return;
+  const i=+bl.dataset.i,b=doc.blocks[i];
+  if(e.key==='Enter'&&(b.t==='todo'||b.t==='h')){ e.preventDefault(); insertBlock(b.t==='todo'?{t:'todo',v:'',done:false}:{t:'p',v:''},i); }
+  else if(e.key==='Backspace'&&!t.value&&(b.t==='todo'||b.t==='h'||b.t==='p')&&doc.blocks.length>1){
+    e.preventDefault(); doc.blocks.splice(i,1); scheduleDocSave(); renderDoc(i>0?i-1:0); }
+});
+dpage.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.add){ const t=b.dataset.add;
+    if(t==='sk') return pickSketchForDoc(curBlk);
+    insertBlock(t==='todo'?{t,v:'',done:false}:t==='areas'?{t}:{t,v:''},curBlk); return; }
+  if(b.dataset.edit) return editSketchFromDoc(b.dataset.edit);
+  const bl=b.closest('.blk'); if(!bl) return; const i=+bl.dataset.i;
+  if(b.dataset.mv){ const j=i+(+b.dataset.mv); if(j<0||j>=doc.blocks.length) return;
+    const [x]=doc.blocks.splice(i,1); doc.blocks.splice(j,0,x); curBlk=j; scheduleDocSave(); renderDoc(); return; }
+  if(b.dataset.rm!=null){
+    if(!b.classList.contains('armed')){ b.classList.add('armed'); b.innerHTML='למחוק?'; return; }
+    doc.blocks.splice(i,1); curBlk=Math.min(i,doc.blocks.length-1); scheduleDocSave(); renderDoc();
+  }
+});
+$('#docTitle').addEventListener('input',e=>{doc.name=e.target.value;scheduleDocSave();});
+$('#docBack').onclick=async()=>{ await closeDoc(); render(); };
+$('#docList').onclick=()=>showProjects();
+$('#docWord').onclick=()=>exportWord();
+
+// projects list (second tab of "My sketches")
+function listTabs(active){
+  return `<div class="tabs"><button class="${active==='sk'?'on':''}" data-tab="sk">סקיצות</button><button class="${active==='pj'?'on':''}" data-tab="pj">מסמכי פרויקט</button></div>`;
+}
+modalEl.addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(!t)return; t.dataset.tab==='pj'?showProjects():showList();});
+async function showProjects(){
+  modal(`<h2>הסקיצות שלי<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>${listTabs('pj')}<div class="hint">טוען…</div>`);
+  const list=(await store.list()).filter(isProj);
+  modal(`<h2>הסקיצות שלי<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>${listTabs('pj')}
+    ${list.length?`<div class="sklist">`+list.map(p=>{const m=p.meta||{},n=(p.blocks||[]).filter(b=>b.t==='sk').length;
+      return `<div class="sk${doc&&doc.id===p.id?' cur':''}"><div class="meta"><b>${esc(p.name||'ללא שם')}</b><small>${[m.client,fmtDate(m.date)].filter(Boolean).map(esc).join(' · ')}${n?` · ${n} סקיצות`:''}</small></div>
+      ${doc&&doc.id===p.id?'<small style="color:var(--accent)">פתוח</small>':`<button class="chip" data-openp="${esc(p.id)}">פתיחה</button>`}
+      <button class="chip danger" data-delp="${esc(p.id)}" aria-label="מחיקת מסמך">${ic('trash')}</button></div>`;}).join('')+`</div>`
+      :`<div class="hint" style="font-size:14.5px">מסמך פרויקט הוא סיכום ביקור בסגנון פתקים: כותבים טקסט, משימות, ומוסיפים סקיצות באמצע. בסוף מייצאים ל-Word.</div>`}
+    <div class="btnrow"><button class="primary" id="newProj">${ic('plus')} מסמך פרויקט חדש</button></div>
+    <div class="hint">מחיקת מסמך לא מוחקת את הסקיצות שבו.</div>`);
+  $('#newProj').onclick=async()=>{ const p=newProject(); await store.save(p); openDoc(p); setTimeout(()=>{const t=$('#docTitle');t.focus();t.select();},50); };
+  modalEl.querySelectorAll('[data-openp]').forEach(b=>b.onclick=()=>{const p=list.find(x=>x.id===b.dataset.openp);if(p)openDoc(p);});
+  modalEl.querySelectorAll('[data-delp]').forEach(b=>b.onclick=async()=>{
+    if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='למחוק?';return;}
+    const id=b.dataset.delp; try{await store.remove(id);}catch(_){toast('המחיקה נכשלה');return;}
+    if(doc&&doc.id===id){docv.hidden=true;doc=null;setView('');}
+    showProjects();
+  });
+}
+
+/* ---------- Word export ---------- */
+async function svgPng(ex,scale){
+  const img=new Image(); img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ex.svg); await img.decode();
+  const c=document.createElement('canvas'); c.width=Math.round(ex.w*scale); c.height=Math.round(ex.h*scale);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  return await new Promise(r=>c.toBlob(r,'image/png'));
+}
+async function exportWord(){
+  if(!doc) return; await saveDocNow(); toast('מכין קובץ Word…');
+  let D; try{ D=await import('./vendor/docx.js'); }catch(e){ toast('ייצוא ל-Word לא זמין כרגע'); return; }
+  const {Document,Packer,Paragraph,TextRun,ImageRun,HeadingLevel,Table,TableRow,TableCell,WidthType,BorderStyle,ShadingType}=D;
+  const R=(text,o={})=>new TextRun({text:String(text??''),rightToLeft:true,font:'Arial',size:o.size||22,sizeComplexScript:o.size||22,
+    bold:!!o.bold,boldComplexScript:!!o.bold,color:o.color,strike:!!o.strike});
+  const P=(kids,o={})=>new Paragraph({bidirectional:true,children:[].concat(kids),heading:o.heading,
+    spacing:{before:o.before||0,after:o.after??120},indent:o.indent?{start:o.indent}:undefined});
+  const out=[],m=doc.meta||{};
+  out.push(P(R(doc.name||'פרויקט',{size:40,bold:true,color:'1C232D'}),{after:60,heading:HeadingLevel.TITLE}));
+  const metaLine=[m.client&&('לקוח: '+m.client),m.address&&('כתובת: '+m.address),m.date&&('תאריך: '+fmtDate(m.date))].filter(Boolean).join('   ·   ');
+  if(metaLine) out.push(P(R(metaLine,{color:'5D6774'}),{after:240}));
+  const cell=(t,o={})=>new TableCell({children:[P(R(t,{bold:o.bold,size:20}),{after:0})],width:{size:o.w,type:WidthType.PERCENTAGE},
+    shading:o.fill?{type:ShadingType.CLEAR,color:'auto',fill:o.fill}:undefined,margins:{top:60,bottom:60,left:100,right:100}});
+  const areasTable=()=>{
+    const a=areasData(); if(!a.groups.length) return [P(R('אין עדיין סקיצות במסמך.',{color:'5D6774'}))];
+    const multi=a.groups.length>1;
+    const rows=[new TableRow({tableHeader:true,children:[cell('פריט',{bold:true,w:70,fill:'E8EBE4'}),cell('שטח (מ״ר)',{bold:true,w:30,fill:'E8EBE4'})]})];
+    a.groups.forEach(g=>{
+      rows.push(new TableRow({children:[new TableCell({columnSpan:2,children:[P(R(g.name,{bold:true,size:20}),{after:0})],shading:{type:ShadingType.CLEAR,color:'auto',fill:'F3F4F0'},margins:{top:60,bottom:60,left:100,right:100}})]}));
+      g.rows.forEach(r=>rows.push(new TableRow({children:[cell(r.name,{w:70}),cell(fmt(r.area),{w:30})]})));
+      if(multi) rows.push(new TableRow({children:[cell('סה״כ',{bold:true,w:70}),cell(fmt(g.total),{bold:true,w:30})]}));
+    });
+    rows.push(new TableRow({children:[cell(multi?'סה״כ בפרויקט':'סה״כ',{bold:true,w:70,fill:'F6E3D8'}),cell(fmt(a.total),{bold:true,w:30,fill:'F6E3D8'})]}));
+    const bd={style:BorderStyle.SINGLE,size:4,color:'D8DCD3'};
+    return [P(R('סיכום שטחים',{size:26,bold:true}),{before:200}),
+      new Table({visuallyRightToLeft:true,width:{size:100,type:WidthType.PERCENTAGE},rows,
+        borders:{top:bd,bottom:bd,left:bd,right:bd,insideHorizontal:bd,insideVertical:bd}}),P(R(''))];
+  };
+  for(const b of doc.blocks){
+    if(b.t==='h'&&b.v) out.push(P(R(b.v,{size:28,bold:true,color:'1C232D'}),{before:240,after:100,heading:HeadingLevel.HEADING_2}));
+    else if(b.t==='p'){
+      String(b.v||'').split('\n').forEach(line=>{
+        const li=line.match(/^\s*[-•*]\s+(.*)$/);
+        out.push(li?P(R('•  '+li[1]),{indent:360,after:60}):P(R(line)));
+      });
+    }
+    else if(b.t==='todo') out.push(P(R((b.done?'☑  ':'☐  ')+(b.v||''),{strike:false,color:b.done?'5D6774':undefined}),{after:60}));
+    else if(b.t==='sk'){
+      const s=skById(b.id); if(!s) continue; const ex=exportSVG(s,{header:false,table:false,foot:false,fs:28}); if(!ex) continue;
+      const png=await svgPng(ex,1.6),buf=await png.arrayBuffer();
+      let w=600,h=Math.round(600*ex.h/ex.w); if(h>720){w=Math.round(w*720/h);h=720;}
+      out.push(P(R(s.name||'סקיצה',{size:24,bold:true}),{before:200,after:60}));
+      out.push(new Paragraph({children:[new ImageRun({type:'png',data:buf,transformation:{width:w,height:h}})],alignment:'center',spacing:{after:60}}));
+      out.push(P(R('סה״כ שטח: '+fmt(skArea(s))+' מ״ר',{color:'5D6774',size:20}),{after:200}));
+    }
+    else if(b.t==='areas') out.push(...areasTable());
+  }
+  out.push(P(R('הסקיצות להערכה בלבד ואינן מדידה מדויקת.',{color:'8A939E',size:18}),{before:300}));
+  const d=new Document({creator:'Sirtuti',title:doc.name||'פרויקט',
+    styles:{default:{document:{run:{font:'Arial'}}}},
+    sections:[{properties:{page:{margin:{top:1100,bottom:1100,left:1000,right:1000}}},children:out}]});
+  const blob=await Packer.toBlob(d);
+  const fname=((doc.name||'פרויקט').replace(/[\\/:*?"<>|]+/g,' ').trim()||'פרויקט')+'.docx';
+  try{ const r=await saveFile(fname,blob,'docx','מסמך Word');
+    if(r==='saved') toast('קובץ ה-Word נשמר'); else if(r==='cancel') $('#toast').hidden=true; else toast('שמירת קבצים לא זמינה כאן'); }
+  catch(e){ toast('שמירת הקובץ נכשלה'); }
+}
+
 /* ---------- boot ---------- */
 openSketch(sampleSketch());
 $('#acctBtn').onclick=showAcct;
@@ -1213,9 +1505,10 @@ if(IS_TAURI) window.addEventListener('focus',async()=>{
     if(cur&&(cur.updated||0)>(sk.updated||0)&&undoS.length===0) openSketch(clone(cur)); }catch(e){}
 });
 store.initClaude().then(async()=>{
-  const list=await store.list();
+  const all=await store.list(),list=all.filter(x=>!isProj(x));
   if(list.length&&sk.example&&undoS.length===0) openSketch(clone(list[0]));
   else if(!sk.example) setStatus(savedText());
+  const v=getView(),pv=v&&all.find(x=>x.id===v&&isProj(x)); if(pv) openDoc(pv);
   cloud.init();
 });
 })();
