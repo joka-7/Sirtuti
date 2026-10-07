@@ -1,7 +1,7 @@
 // Sirtuti service worker: app shell cached for offline use.
 // Bump VERSION on every release so phones pick up the new files.
-const VERSION = 'sirtuti-v1';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
+const VERSION = 'sirtuti-v2';
+const SHELL = ['./', 'index.html', 'firebase-config.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -23,12 +23,13 @@ self.addEventListener('fetch', e => {
   const isFont = /fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
   if (!sameOrigin && !isFont) return;
 
-  // Network first for the page itself (fresh when online), cache first for everything else.
-  if (req.mode === 'navigate') {
+  // Network first for the page and its config (fresh when online), cache first for everything else.
+  if (req.mode === 'navigate' || url.pathname.endsWith('/firebase-config.js')) {
+    const key = req.mode === 'navigate' ? 'index.html' : req;
     e.respondWith(
       fetch(req)
-        .then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put('index.html', copy)); return res; })
-        .catch(() => caches.match('index.html'))
+        .then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put(key, copy)); return res; })
+        .catch(() => caches.match(key))
     );
     return;
   }

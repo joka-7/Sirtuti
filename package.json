@@ -1,0 +1,17 @@
+{
+  "name": "sirtuti",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Dimensioned sketch board for site visits and price quotes",
+  "license": "MIT",
+  "scripts": {
+    "dev": "python3 -m http.server -d web 8000",
+    "build:firebase": "esbuild tools/firebase-entry.js --bundle --format=esm --minify --target=es2020 --outfile=web/vendor/firebase.js",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.1",
+    "esbuild": "^0.25.0",
+    "firebase": "^13.0.0"
+  }
+}

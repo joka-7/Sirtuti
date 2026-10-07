@@ -58,6 +58,9 @@ button{cursor:pointer}
 .total small{font-size:11px;color:var(--ink-2)}
 .ib{width:38px;height:38px;border-radius:8px;border:1px solid transparent;background:transparent;display:grid;place-items:center;flex:none}
 .ib:hover{background:var(--paper)}
+.top .ib.on{color:var(--accent);background:var(--accent-soft)}
+.acct{display:flex;flex-direction:column;gap:2px;background:var(--paper);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.acct span{color:var(--ink-2);font-size:13.5px;text-align:right}
 .ib:disabled{opacity:.35;cursor:default}
 .ib svg{width:20px;height:20px}
 .icons{display:flex;gap:2px;flex:none}
@@ -195,6 +198,7 @@ tfoot td{font-weight:700;border-bottom:0}
     <div class="icons">
       <button class="ib" id="undoBtn" title="ביטול" aria-label="ביטול"></button>
       <button class="ib" id="redoBtn" title="שחזור" aria-label="שחזור"></button>
+      <button class="ib" id="acctBtn" hidden aria-label="חשבון Google"></button>
       <button class="ib" id="listBtn" title="הסקיצות שלי" aria-label="הסקיצות שלי"></button>
       <button class="ib" id="expBtn" title="שמירה כתמונה" aria-label="שמירה כתמונה"></button>
     </div>
@@ -229,6 +233,7 @@ tfoot td{font-weight:700;border-bottom:0}
 <div id="modal" class="modal" hidden></div>
 <div id="toast" class="toast" hidden></div>
 
+<script src="firebase-config.js"></script>
 <script>
 (function(){
 "use strict";
@@ -246,11 +251,12 @@ const ICON={
  trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
  cw:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
  ccw:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
  pen:'<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
  up:'<path d="m18 15-6-6-6 6"/>', down:'<path d="m6 9 6 6 6-6"/>'
 };
 const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[n]}</svg>`;
-$('#undoBtn').innerHTML=ic('undo');$('#redoBtn').innerHTML=ic('redo');$('#listBtn').innerHTML=ic('folder');$('#expBtn').innerHTML=ic('dl');
+$('#undoBtn').innerHTML=ic('undo');$('#acctBtn').innerHTML=ic('user');$('#redoBtn').innerHTML=ic('redo');$('#listBtn').innerHTML=ic('folder');$('#expBtn').innerHTML=ic('dl');
 $('#magBtn').innerHTML=ic('mag');$('#zinBtn').innerHTML=ic('plus');$('#zoutBtn').innerHTML=ic('minus');$('#fitBtn').innerHTML=ic('fit');
 $('#addBtn').innerHTML=ic('plus')+'<span>הוספת צורה</span>';
 $('#drawBtn').innerHTML=ic('pen')+'<span>שרטוט ידני</span>';
@@ -441,49 +447,163 @@ function newSketch(){
 }
 
 /* ---------- storage ---------- */
+// Local copy is always the source of truth on this device. A "remote" (Claude artifact store or
+// Firebase) mirrors it when available. Local entries carry `cloud:<uid>` once Firebase confirmed them.
 const LS='sketcher.v1';
+const IS_TAURI=!!(window.__TAURI_INTERNALS__||window.__TAURI__);
+const clone=o=>JSON.parse(JSON.stringify(o));
 const local={
   read(){try{return JSON.parse(localStorage.getItem(LS)||'{}')||{}}catch(e){return {}}},
-  write(o){try{localStorage.setItem(LS,JSON.stringify(o))}catch(e){}}
+  write(o){try{localStorage.setItem(LS,JSON.stringify(o))}catch(e){}},
+  all(){return this.read().sketches||{}},
+  put(s){const o=this.read();o.sketches=o.sketches||{};o.sketches[s.id]=s;this.write(o);},
+  del(id){const o=this.read();if(o.sketches&&o.sketches[id]){delete o.sketches[id];this.write(o);}}
 };
-const store={mode:'local',db:null,uid:null,
-  async init(){
+const plain=s=>clone({name:s.name||'',updated:s.updated||Date.now(),shapes:s.shapes||[]});
+let syncSt='';
+const store={remote:null,
+  get mode(){return this.remote?this.remote.kind:'local'},
+  async initClaude(){
     try{
       if(!window.claude||!window.claude.use) return;
       const [user,db]=await Promise.all([window.claude.use('user'),window.claude.use('db')]);
-      if(user&&db){const id=await user.id(); if(id){this.db=db;this.uid=id;this.mode='db';}}
+      if(!user||!db) return; const id=await user.id(); if(!id) return;
+      const col=()=>db.collection('data/users/'+id);
+      this.remote={kind:'claude',uid:id,
+        list:async()=>({docs:(await col().get()).docs.map(d=>({id:d.id,...d.data()})),fromServer:true}),
+        save:(sid,body)=>col().doc(sid).set(body),
+        remove:sid=>col().doc(sid).delete()};
     }catch(e){}
   },
-  col(){return this.db.collection('data/users/'+this.uid)},
   async list(){
-    const all={...(local.read().sketches||{})};
-    if(this.mode==='db'){
-      try{const q=await this.col().get();q.docs.forEach(d=>{const v=d.data();if(v&&Array.isArray(v.shapes)){const o={id:d.id,...v};if(!all[d.id]||(all[d.id].updated||0)<=(o.updated||0))all[d.id]=o;}});}catch(e){}
+    const L=local.all(),all={};
+    Object.values(L).forEach(s=>{if(s&&Array.isArray(s.shapes)) all[s.id]=s;});
+    const r=this.remote;
+    if(r){
+      try{
+        const {docs,fromServer}=await r.list(),ids=new Set(docs.map(d=>d.id));
+        // deleted on another device: drop local copies that were confirmed in the cloud but are gone now
+        if(r.kind==='firebase'&&fromServer) Object.values(L).forEach(s=>{if(s.cloud===r.uid&&!ids.has(s.id)){local.del(s.id);delete all[s.id];}});
+        docs.forEach(o=>{
+          if(!Array.isArray(o.shapes)) return; const cur=all[o.id];
+          if(!cur||(cur.updated||0)<=(o.updated||0)){ all[o.id]=o; if(r.kind==='firebase') local.put({...o,cloud:r.uid}); }
+        });
+      }catch(e){}
     }
     return Object.values(all).sort((a,b)=>(b.updated||0)-(a.updated||0));
   },
   async save(s){
-    const body=JSON.parse(JSON.stringify({name:s.name,updated:s.updated,shapes:s.shapes}));
-    const o=local.read();o.sketches=o.sketches||{};o.sketches[s.id]={id:s.id,...body};local.write(o);
-    if(this.mode==='db') await this.col().doc(s.id).set(body);
+    const body=plain(s),prev=local.all()[s.id];
+    local.put({id:s.id,...body,cloud:prev?prev.cloud:undefined});
+    const r=this.remote; if(!r) return;
+    if(r.kind==='claude'){ await r.save(s.id,body); return; }
+    pushCloud(r,s.id,body);   // Firebase: never block on the server (works offline, syncs later)
   },
   async remove(id){
-    const o=local.read();if(o.sketches){delete o.sketches[id];local.write(o);}
-    if(this.mode==='db') await this.col().doc(id).delete();
+    local.del(id); const r=this.remote; if(!r) return;
+    const p=r.remove(id); if(r.kind==='claude') await p; else p.catch(()=>{});
   }
 };
+function pushCloud(r,id,body){
+  setSync('pending');
+  r.save(id,body).then(()=>{
+    const cur=local.all()[id]; if(cur&&cur.updated===body.updated){cur.cloud=r.uid;local.put(cur);}
+    if(store.remote===r) setSync('ok');
+  }).catch(()=>{ if(store.remote===r) setSync('err'); });
+}
+function setSync(st){ syncSt=st; if(!saving&&!saveT&&!sk.example) setStatus(savedText()); }
 let saveT=null,saving=false,again=false;
 function setStatus(t){$('#status').textContent=t;}
-function savedText(){return store.mode==='db'?'נשמר בחשבון שלך':'נשמר בדפדפן הזה';}
+function savedText(){
+  if(store.mode==='claude') return 'נשמר בחשבון שלך';
+  if(store.mode==='firebase') return syncSt==='pending'?'נשמר · מסנכרן ל-Google…':syncSt==='err'?'נשמר במכשיר · הסנכרון ל-Google נכשל':'נשמר בחשבון Google';
+  return IS_TAURI?'נשמר במחשב הזה':'נשמר בדפדפן הזה';
+}
 function scheduleSave(){
   sk.example=false;sk.updated=Date.now();setStatus('שומר…');
   clearTimeout(saveT);saveT=setTimeout(doSave,700);
 }
 async function doSave(){
+  saveT=null;
   if(saving){again=true;return;} saving=true;
-  try{await store.save(sk);setStatus(savedText());}
-  catch(e){setStatus(e&&e.code==='quota_exceeded'?'אין מקום לשמירה: מחק סקיצות ישנות':'השמירה נכשלה, ננסה שוב בשינוי הבא');}
-  saving=false; if(again){again=false;doSave();}
+  try{await store.save(sk);saving=false;setStatus(savedText());}
+  catch(e){saving=false;setStatus(e&&e.code==='quota_exceeded'?'אין מקום לשמירה: מחק סקיצות ישנות':'השמירה נכשלה, ננסה שוב בשינוי הבא');}
+  if(again){again=false;doSave();}
+}
+
+/* ---------- Google account (Firebase) ---------- */
+const cloud={fb:null,auth:null,fs:null,user:null,failed:false,
+  configured(){const c=window.SIRTUTI_FIREBASE;return !!(c&&c.apiKey)&&!IS_TAURI&&!window.claude;},
+  async init(){
+    if(!this.configured()) return;
+    $('#acctBtn').hidden=false;
+    try{
+      const fb=await import('./vendor/firebase.js'); this.fb=fb;
+      const app=fb.initializeApp(window.SIRTUTI_FIREBASE);
+      this.auth=fb.getAuth(app);
+      try{this.fs=fb.initializeFirestore(app,{localCache:fb.persistentLocalCache({tabManager:fb.persistentMultipleTabManager()})});}
+      catch(e){this.fs=fb.initializeFirestore(app,{});}
+      fb.getRedirectResult(this.auth).catch(e=>toast(authErr(e)));
+      fb.onAuthStateChanged(this.auth,u=>this.onUser(u));
+    }catch(e){ this.failed=true; console.warn('Firebase unavailable',e); }
+  },
+  col(uid){return this.fb.collection(this.fs,'users',uid,'sketches');},
+  async onUser(u){
+    this.user=u; updAcct();
+    if(!u){ if(store.mode==='firebase'){store.remote=null;syncSt='';if(!sk.example)setStatus(savedText());} return; }
+    const fb=this.fb,id=u.uid,col=()=>this.col(id);
+    const r={kind:'firebase',uid:id,
+      list:async()=>{let snap,fromServer=true;
+        try{snap=await fb.getDocsFromServer(col());}catch(e){snap=await fb.getDocs(col());fromServer=false;}
+        return {docs:snap.docs.map(d=>({id:d.id,...d.data()})),fromServer};},
+      save:(sid,body)=>fb.setDoc(fb.doc(col(),sid),body),
+      remove:sid=>fb.deleteDoc(fb.doc(col(),sid))};
+    store.remote=r;
+    // upload sketches that so far exist only on this device
+    try{
+      const {docs}=await r.list(),cm={}; docs.forEach(d=>cm[d.id]=d);
+      Object.values(local.all()).forEach(s=>{ if(s.cloud===id) return; const c=cm[s.id];
+        if(!c||(c.updated||0)<(s.updated||0)) pushCloud(r,s.id,plain(s)); });
+    }catch(e){}
+    const list=await store.list();
+    if(sk.example&&undoS.length===0&&list.length) openSketch(clone(list[0]));
+    else if(!sk.example){ store.save(sk); setStatus(savedText()); }
+  },
+  async signIn(){
+    if(!this.fb){toast('אין חיבור ל-Google כרגע');return;}
+    const p=new this.fb.GoogleAuthProvider(); p.setCustomParameters({prompt:'select_account'});
+    try{ await this.fb.signInWithPopup(this.auth,p); closeModal(); toast('מחובר. הסקיצות יישמרו בחשבון Google'); }
+    catch(e){
+      const c=(e&&e.code)||'';
+      if(/popup-blocked|operation-not-supported/.test(c)) return this.fb.signInWithRedirect(this.auth,p);
+      if(/popup-closed|cancelled-popup/.test(c)) return;
+      toast(authErr(e));
+    }
+  },
+  async signOut(){ await this.fb.signOut(this.auth); closeModal(); toast('התנתקת. הסקיצות נשארות גם במכשיר הזה'); }
+};
+function authErr(e){
+  const c=(e&&e.code)||'';
+  if(c.includes('unauthorized-domain')) return 'הכתובת הזו לא מאושרת ב-Firebase (Authorized domains)';
+  if(c.includes('network')) return 'אין חיבור לאינטרנט';
+  return 'ההתחברות נכשלה';
+}
+function updAcct(){
+  const b=$('#acctBtn'),u=cloud.user; b.classList.toggle('on',!!u);
+  b.title=u?('מחובר: '+(u.email||'')):'התחברות לחשבון Google';
+}
+function showAcct(){
+  const u=cloud.user,x=`<button class="ib" data-close aria-label="סגירה">${ic('x')}</button>`;
+  if(u) modal(`<h2>חשבון Google${x}</h2>
+    <div class="acct"><b>${esc(u.displayName||'')}</b><span dir="ltr">${esc(u.email||'')}</span></div>
+    <div class="hint">הסקיצות נשמרות בחשבון שלך ומסתנכרנות בין כל המכשירים שמחוברים אליו. גם בלי אינטרנט אפשר לעבוד, והסנכרון ישלים כשיחזור החיבור.</div>
+    <div class="btnrow"><button class="chip" id="signOut">התנתקות</button></div>`);
+  else modal(`<h2>חשבון Google${x}</h2>
+    <div class="hint" style="font-size:14.5px">התחבר כדי לשמור את הסקיצות בחשבון Google שלך ולפתוח אותן מכל מכשיר. בלי התחברות הן נשמרות רק ${IS_TAURI?'במחשב הזה':'בדפדפן הזה'}.</div>
+    ${cloud.failed?'<div class="err">לא ניתן להתחבר ל-Google כרגע. בדוק את החיבור לאינטרנט ונסה שוב.</div>':''}
+    <div class="btnrow"><button class="primary" id="signIn">התחברות עם Google</button></div>`);
+  const si=$('#signIn'),so=$('#signOut');
+  if(si) si.onclick=()=>cloud.signIn(); if(so) so.onclick=()=>cloud.signOut();
 }
 
 /* ---------- history ---------- */
@@ -907,8 +1027,11 @@ async function showList(){
    <div class="sklist">`+list.map(s=>`<div class="sk${s.id===sk.id?' cur':''}"><div class="meta"><b>${esc(s.name||'ללא שם')}</b><small>${dateStr(s.updated||Date.now())} · ${s.shapes.length} צורות · ${fmt(area(s))} מ״ר</small></div>
      ${s.id===sk.id?'<small style="color:var(--accent)">פתוחה</small>':`<button class="chip" data-open="${s.id}">פתיחה</button>`}
      <button class="chip danger" data-delsk="${s.id}" aria-label="מחיקת סקיצה">${ic('trash')}</button></div>`).join('')+`</div>
-   <div class="btnrow"><button class="primary" id="newSk">${''}סקיצה חדשה</button></div>
-   <div class="hint">${store.mode==='db'?'הסקיצות נשמרות בחשבון שלך וזמינות מכל מכשיר.':'הסקיצות נשמרות בדפדפן הזה בלבד.'}</div>`);
+   <div class="btnrow"><button class="primary" id="newSk">סקיצה חדשה</button><button class="chip" id="bkOut">${ic('dl')} גיבוי לקובץ</button><button class="chip" id="bkIn">ייבוא מקובץ</button><input type="file" id="bkFile" accept=".json,application/json" hidden></div>
+   <div class="hint">${store.mode==='claude'?'הסקיצות נשמרות בחשבון שלך וזמינות מכל מכשיר.':store.mode==='firebase'?'הסקיצות נשמרות בחשבון Google שלך ומסתנכרנות בין המכשירים.':(IS_TAURI?'הסקיצות נשמרות במחשב הזה.':'הסקיצות נשמרות בדפדפן הזה בלבד.')+(cloud.configured()&&!cloud.user?' התחבר לחשבון Google כדי לשמור אותן גם בענן.':' קובץ גיבוי מאפשר להעביר אותן למכשיר אחר.')}</div>`);
+  $('#bkOut').onclick=()=>backupOut(list.filter(x=>!x.example));
+  $('#bkIn').onclick=()=>$('#bkFile').click();
+  $('#bkFile').onchange=e=>{const f=e.target.files&&e.target.files[0]; if(f) backupIn(f);};
   $('#newSk').onclick=()=>{ openSketch(newSketch()); closeModal(); scheduleSave(); };
   modalEl.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const s=list.find(x=>x.id===b.dataset.open); openSketch(JSON.parse(JSON.stringify(s))); closeModal();});
   modalEl.querySelectorAll('[data-delsk]').forEach(b=>b.onclick=async()=>{
@@ -958,6 +1081,46 @@ function exportSVG(){
   return {svg:g,w:Wd,h:Hd};
 }
 const dlP=(window.claude&&window.claude.use)?window.claude.use('downloads').catch(()=>null):Promise.resolve(null);
+// Save a generated file: desktop app → native save dialog; browser → normal download; Claude → downloads capability.
+async function saveFile(name,data,ext,label){
+  const T=window.__TAURI__;
+  if(IS_TAURI&&T&&T.dialog&&T.fs){
+    const path=await T.dialog.save({defaultPath:name,filters:[{name:label,extensions:[ext]}]});
+    if(!path) return 'cancel';
+    if(typeof data==='string') await T.fs.writeTextFile(path,data);
+    else await T.fs.writeFile(path,new Uint8Array(await data.arrayBuffer()));
+    return 'saved';
+  }
+  if(window.claude){
+    const dl=await dlP; if(!dl) return 'fallback';
+    try{ await dl.save({filename:name,data}); return 'saved'; }catch(e){ return e&&e.code==='declined'?'cancel':'fallback'; }
+  }
+  const blob=typeof data==='string'?new Blob([data],{type:'application/json'}):data;
+  const a=document.createElement('a'),u=URL.createObjectURL(blob);
+  a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+  return 'saved';
+}
+async function backupOut(list){
+  if(!list.length){toast('אין סקיצות לגיבוי');return;}
+  const d=new Date(),ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const json=JSON.stringify({app:'sirtuti',format:1,exported:d.toISOString(),sketches:list.map(s=>({id:s.id,...plain(s)}))},null,1);
+  try{ const r=await saveFile('sirtuti-backup-'+ds+'.json',json,'json','גיבוי שרטוטי');
+    if(r==='saved') toast('נשמר גיבוי של '+list.length+' סקיצות'); else if(r==='fallback') toast('שמירת קבצים לא זמינה כאן'); }
+  catch(e){ toast('שמירת הגיבוי נכשלה'); }
+}
+async function backupIn(file){
+  let data; try{ data=JSON.parse(await file.text()); }catch(e){ toast('הקובץ לא נקרא: זה לא קובץ גיבוי של שרטוטי'); return; }
+  const arr=Array.isArray(data&&data.sketches)?data.sketches:null;
+  if(!arr){ toast('הקובץ לא נקרא: זה לא קובץ גיבוי של שרטוטי'); return; }
+  const have=local.all(); let n=0;
+  for(const s of arr){
+    if(!s||!Array.isArray(s.shapes)) continue;
+    const id=s.id||('s'+uid()),cur=have[id];
+    if(cur&&(cur.updated||0)>=(s.updated||0)) continue;
+    await store.save({id,...plain(s)}); n++;
+  }
+  toast(n?('יובאו '+n+' סקיצות'):'כל הסקיצות בקובץ כבר קיימות'); showList();
+}
 $('#expBtn').onclick=async()=>{
   const ex=exportSVG(); if(!ex){toast('אין צורות לשמירה');return;}
   toast('מכין תמונה…');
@@ -968,9 +1131,9 @@ $('#expBtn').onclick=async()=>{
     const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,c.width,c.height);
     const blob=await new Promise(r=>c.toBlob(r,'image/png'));
     const fname=((sk.name||'סקיצה').replace(/[\\/:*?"<>|]+/g,' ').trim()||'סקיצה')+'.png';
-    const dl=await dlP;
-    if(!window.claude){ const a=document.createElement('a'); const u=URL.createObjectURL(blob); a.href=u; a.download=fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); toast('התמונה נשמרה'); return; }
-    if(dl){ try{ await dl.save({filename:fname,data:blob}); toast('התמונה נשמרה'); return; }catch(e){ if(e&&e.code==='declined'){ $('#toast').hidden=true; return; } } }
+    const r=await saveFile(fname,blob,'png','תמונה');
+    if(r==='saved'){ toast('התמונה נשמרה'); return; }
+    if(r==='cancel'){ $('#toast').hidden=true; return; }
     const url=URL.createObjectURL(blob);
     modal(`<h2>הסקיצה כתמונה<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2><img class="expimg" src="${url}" alt="סקיצה"><div class="hint">בטלפון: לחיצה ארוכה על התמונה ← שמירה או שיתוף. במחשב: קליק ימני ← שמירת תמונה.</div>`);
   }catch(e){ toast('יצירת התמונה נכשלה'); }
@@ -978,15 +1141,17 @@ $('#expBtn').onclick=async()=>{
 
 /* ---------- boot ---------- */
 openSketch(sampleSketch());
-store.init().then(async()=>{
+$('#acctBtn').onclick=showAcct;
+store.initClaude().then(async()=>{
   const list=await store.list();
-  if(list.length&&sk.example&&undoS.length===0) openSketch(JSON.parse(JSON.stringify(list[0])));
+  if(list.length&&sk.example&&undoS.length===0) openSketch(clone(list[0]));
   else if(!sk.example) setStatus(savedText());
+  cloud.init();
 });
 })();
 </script>
 <script>
-if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+if('serviceWorker' in navigator && location.protocol.startsWith('http') && !window.__TAURI_INTERNALS__ && !window.__TAURI__){
   window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 }
 </script>

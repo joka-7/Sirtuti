@@ -1,0 +1,17 @@
+{
+  "identifier": "default",
+  "description": "Save exported sketches and backups to files the user picks.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:allow-save",
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [{ "path": "$HOME/**" }, { "path": "$DESKTOP/**" }, { "path": "$DOCUMENT/**" }, { "path": "$DOWNLOAD/**" }, { "path": "$PICTURE/**" }]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "$HOME/**" }, { "path": "$DESKTOP/**" }, { "path": "$DOCUMENT/**" }, { "path": "$DOWNLOAD/**" }, { "path": "$PICTURE/**" }]
+    }
+  ]
+}
