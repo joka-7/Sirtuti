@@ -2,7 +2,7 @@
 
 Dimensioned sketches for site visits. Draw rooms, lots and other elements, enter their measurements, and get the area and perimeter of every shape plus a total. Built for price quotes (painting, flooring, etc.): a fast, clean estimate, not a survey.
 
-The app UI is in Hebrew (RTL).
+The app is available in Hebrew (RTL), English and French, with metric or imperial (feet/inches) units.
 
 **Web app:** https://joka-7.github.io/Sirtuti/
 **Desktop installers:** see [Releases](https://github.com/joka-7/Sirtuti/releases)
@@ -12,8 +12,9 @@ The app UI is in Hebrew (RTL).
 - Hand drawing: point by point or freehand, with automatic straightening. Close the shape at the start point or leave it as an open line.
 - Drag, rotate, snap to other shapes' corners, duplicate, undo/redo, bring to front / send to back.
 - Area and perimeter per shape (each can be hidden), an area summary that can be copied as text.
-- Export to PNG with all dimensions and an area table.
-- **Project documents:** notes-style site-visit summaries with client, address and date, headings, text (lines starting with `-` become bullets), checklists, sketches placed inline, and an automatic area summary across all sketches in the document. Tap a sketch to edit it and return to the document. Export to Word (`.docx`, right-to-left) with the sketches as images.
+- Export a sketch to PNG or a one-page A4 PDF with all dimensions and an area table.
+- Settings: language (Hebrew / English / French) and units (metric m, m² or imperial ft-in, ft²). New users get their device language; values are always stored in meters, so switching units never changes a sketch.
+- **Project documents:** notes-style site-visit summaries with client, address and date, headings, text (lines starting with `-` become bullets), checklists, sketches placed inline, and an automatic area summary across all sketches in the document. Tap a sketch to edit it and return to the document. Export to Word (`.docx`) or PDF with the sketches as images, right-to-left in Hebrew.
 - Desktop app shows its version and tells you when a newer release is available.
 - Optional Google sign-in (Firebase) to sync sketches across devices.
 - Backup/restore of all sketches to a JSON file.
@@ -48,6 +49,7 @@ The Firebase web config is not a secret; access is enforced by the Firestore rul
 ```
 web/                         The app (static, no build step)
   index.html                 Entire UI: HTML, CSS and JS
+  i18n.js                    English and French translations (keys are the Hebrew source strings)
   firebase-config.js         Firebase web config (null = no sign-in)
   vendor/firebase.js         Bundled Firebase SDK (auth + firestore)
   vendor/docx.js             Bundled docx library for Word export
@@ -71,6 +73,9 @@ npm run build:firebase       # rebuild web/vendor/firebase.js after upgrading fi
 npm run build:docx           # rebuild web/vendor/docx.js after upgrading docx
 ```
 Tauri prerequisites: https://v2.tauri.app/start/prerequisites/
+
+## Translations
+UI strings in `web/index.html` are Hebrew and wrapped in `tt("...")`; `web/i18n.js` maps each one to English and French. To add a string, wrap it in `tt()` and add its translations. To add a language, add an object to `i18n.js` and a button in the settings dialog.
 
 ## Releasing
 1. Bump the version in `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` and `package.json`.

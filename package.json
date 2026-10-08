@@ -1,7 +1,7 @@
 {
   "name": "sirtuti",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Dimensioned sketch board for site visits and price quotes",
   "license": "MIT",
   "scripts": {

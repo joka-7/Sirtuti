@@ -62,8 +62,8 @@ button{cursor:pointer}
 .acct{display:flex;flex-direction:column;gap:2px;background:var(--paper);border-radius:8px;padding:10px 12px;margin-bottom:8px}
 .fold{display:flex;flex-direction:column;gap:4px;background:var(--paper);border-radius:10px;padding:10px 12px;margin-top:12px;font-size:13.5px;color:var(--ink-2);line-height:1.45}
 .fold b{color:var(--ink);font-size:14.5px}
-.fpath{font-size:12.5px;word-break:break-all;text-align:right;color:var(--ink)}
-.acct span{color:var(--ink-2);font-size:13.5px;text-align:right}
+.fpath{font-size:12.5px;word-break:break-all;text-align:start;color:var(--ink)}
+.acct span{color:var(--ink-2);font-size:13.5px;text-align:start}
 .ib:disabled{opacity:.35;cursor:default}
 .ib svg{width:20px;height:20px}
 .icons{display:flex;gap:2px;flex:none}
@@ -171,9 +171,9 @@ button{cursor:pointer}
 .card h2{margin:0 0 12px;font-size:18px;text-wrap:balance;display:flex;justify-content:space-between;align-items:center}
 .tbl{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
-th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);font-size:14px}
+th,td{text-align:start;padding:8px 6px;border-bottom:1px solid var(--line);font-size:14px}
 th{font-weight:500;color:var(--ink-2);font-size:12.5px}
-td.n,th.n{text-align:left}
+td.n,th.n{text-align:end}
 tfoot td{font-weight:700;border-bottom:0}
 .sklist{display:flex;flex-direction:column;gap:8px}
 .sk{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
@@ -199,6 +199,16 @@ tfoot td{font-weight:700;border-bottom:0}
 .dlfile span{display:flex;flex-direction:column;min-width:0}
 .dlfile small{color:var(--ink-2);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 a.chip{color:var(--ink);text-decoration:none}
+.expopts{display:flex;flex-direction:column;gap:8px}
+.expopt{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--board);border-radius:12px;padding:12px 14px;text-align:start}
+.expopt:hover{border-color:var(--accent)}
+.expopt svg{width:24px;height:24px;color:var(--accent);flex:none}
+.expopt span{display:flex;flex-direction:column;gap:2px}
+.expopt small{color:var(--ink-2);font-size:12.5px}
+.setg{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.setg .tabs{margin:0}
+.setg .tabs button{display:flex;flex-direction:column;align-items:center;gap:1px}
+.setg .tabs small{font-size:11.5px;opacity:.8}
 /* project document */
 .docv{position:fixed;inset:0;z-index:12;background:var(--paper);display:grid;grid-template-rows:auto 1fr;padding-top:env(safe-area-inset-top,0px)}
 .docv .top .chip{flex:none}
@@ -226,7 +236,7 @@ a.chip{color:var(--ink);text-decoration:none}
 .btodo{display:flex;align-items:center;gap:10px}
 .btodo input[type=checkbox]{width:19px;height:19px;accent-color:var(--accent);flex:none;margin:0}
 .bt{font-size:15.5px}.bt.done{text-decoration:line-through;color:var(--ink-2)}
-.bsk{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;padding:0;width:100%;text-align:right;cursor:pointer}
+.bsk{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;padding:0;width:100%;text-align:start;cursor:pointer}
 .bsk:hover{border-color:var(--accent)}
 .bsk img{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;background:#fff}
 .bsk .cap{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 12px;background:var(--paper);border-top:1px solid var(--line);color:var(--ink);font-size:14px}
@@ -244,6 +254,7 @@ a.chip{color:var(--ink);text-decoration:none}
 .backdoc{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:4;display:inline-flex;gap:6px;align-items:center;max-width:calc(100% - 32px);background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:8px 14px;font-weight:500;box-shadow:0 4px 14px rgba(196,80,26,.3)}
 .backdoc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .backdoc svg{width:16px;height:16px;transform:rotate(90deg)}
+[dir=ltr] .backdoc svg{transform:rotate(-90deg)}
 .tabs{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}
 .tabs button{flex:1;border:0;background:var(--board);padding:9px;font-size:14.5px}
 .tabs button.on{background:var(--accent);color:var(--accent-ink);font-weight:500}
@@ -308,10 +319,28 @@ a.chip{color:var(--ink);text-decoration:none}
 <div id="modal" class="modal" hidden></div>
 <div id="toast" class="toast" hidden></div>
 
+<script src="i18n.js"></script>
 <script src="firebase-config.js"></script>
 <script>
 (function(){
 "use strict";
+/* ---------- language ---------- */
+const LANG=(()=>{try{const v=localStorage.getItem('sirtuti.lang');if(v==='he'||v==='en'||v==='fr')return v;
+  if(localStorage.getItem('sketcher.v1'))return 'he';}catch(e){}           // existing users keep Hebrew
+  const n=(navigator.language||'').toLowerCase();
+  return n.startsWith('he')||n.startsWith('iw')?'he':n.startsWith('fr')?'fr':'en';})();
+const DICT=LANG==='he'?null:((window.SIRTUTI_I18N||{})[LANG]||null);
+const tt=s=>(DICT&&DICT[s]!=null)?DICT[s]:s;
+const RTL=LANG==='he';
+document.documentElement.lang=LANG; document.documentElement.dir=RTL?'rtl':'ltr';
+document.querySelectorAll('[dir="rtl"]').forEach(e=>e.dir=RTL?'rtl':'ltr');
+(function translateStatic(){
+  if(!DICT) return; const he=/[֐-׿]/,w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),list=[]; let n;
+  while((n=w.nextNode())) if(he.test(n.nodeValue)) list.push(n);
+  list.forEach(n=>{const k=n.nodeValue.trim(); n.nodeValue=n.nodeValue.replace(k,tt(k));});
+  document.querySelectorAll('[title],[aria-label],[placeholder]').forEach(e=>['title','aria-label','placeholder'].forEach(a=>{const v=e.getAttribute(a); if(v&&he.test(v)) e.setAttribute(a,tt(v));}));
+  document.title=tt('שרטוטי');
+})();
 const $=s=>document.querySelector(s);
 const ICON={
  undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
@@ -327,29 +356,33 @@ const ICON={
  cw:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
  ccw:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+ file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+ image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
  monitor:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
  right:'<path d="m9 18 6-6-6-6"/>',
+ left:'<path d="m15 18-6-6 6-6"/>',
  pen:'<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
  up:'<path d="m18 15-6-6-6 6"/>', down:'<path d="m6 9 6 6 6-6"/>'
 };
 const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[n]}</svg>`;
 $('#undoBtn').innerHTML=ic('undo');$('#acctBtn').innerHTML=ic('user');$('#redoBtn').innerHTML=ic('redo');$('#listBtn').innerHTML=ic('folder');$('#expBtn').innerHTML=ic('dl');
 $('#magBtn').innerHTML=ic('mag');$('#zinBtn').innerHTML=ic('plus');$('#zoutBtn').innerHTML=ic('minus');$('#fitBtn').innerHTML=ic('fit');
-$('#addBtn').innerHTML=ic('plus')+'<span>הוספת צורה</span>';
-$('#drawBtn').innerHTML=ic('pen')+'<span>שרטוט ידני</span>';
-$('#docBack').innerHTML=ic('right');$('#docList').innerHTML=ic('folder');$('#docWord').innerHTML=ic('dl')+'<span>Word</span>';
+$('#addBtn').innerHTML=ic('plus')+tt("<span>הוספת צורה</span>");
+$('#drawBtn').innerHTML=ic('pen')+tt("<span>שרטוט ידני</span>");
+$('#docBack').innerHTML=ic(RTL?'right':'left');$('#docList').innerHTML=ic('folder');$('#docWord').innerHTML=ic('dl')+'<span>'+tt("ייצוא")+'</span>';$('#docWord').title=tt("ייצוא");
 
 const PALETTE=['#2f6fb0','#1f8a7a','#c27c12','#b5485d','#6b5bb5','#4f6272'];
-const KIND_LABEL={rect:'מלבן / ריבוע',tri:'משולש',trap:'טרפז',reg:'מצולע משוכלל',L:'צורת L',free:'מצולע חופשי',circle:'עיגול',line:'קו מידה'};
-const SHORT={rect:'מלבן',tri:'משולש',trap:'טרפז',reg:'מצולע',L:'חדר L',free:'מצולע',circle:'עיגול',line:'קו'};
+const KIND_LABEL={rect:tt("מלבן / ריבוע"),tri:tt("משולש"),trap:tt("טרפז"),reg:tt("מצולע משוכלל"),L:tt("צורת L"),free:tt("מצולע חופשי"),circle:tt("עיגול"),line:tt("קו מידה")};
+const SHORT={rect:tt("מלבן"),tri:tt("משולש"),trap:tt("טרפז"),reg:tt("מצולע"),L:tt("חדר L"),free:tt("מצולע"),circle:tt("עיגול"),line:tt("קו")};
 const FIELDS={
- rect:[['w','רוחב'],['h','אורך']],
- tri:[['a','צלע א (בסיס)'],['b','צלע ב'],['c','צלע ג']],
- trap:[['a','בסיס תחתון'],['b','בסיס עליון'],['h','גובה'],['o','הסטת העליון']],
- reg:[['n','מספר צלעות'],['s','אורך צלע']],
- L:[['w','רוחב כולל'],['h','אורך כולל'],['cw','רוחב החיתוך'],['ch','אורך החיתוך']],
- circle:[['r','רדיוס']],
- line:[['len','אורך']],
+ rect:[['w',tt("רוחב")],['h',tt("אורך")]],
+ tri:[['a',tt("צלע א (בסיס)")],['b',tt("צלע ב")],['c',tt("צלע ג")]],
+ trap:[['a',tt("בסיס תחתון")],['b',tt("בסיס עליון")],['h',tt("גובה")],['o',tt("הסטת העליון")]],
+ reg:[['n',tt("מספר צלעות")],['s',tt("אורך צלע")]],
+ L:[['w',tt("רוחב כולל")],['h',tt("אורך כולל")],['cw',tt("רוחב החיתוך")],['ch',tt("אורך החיתוך")]],
+ circle:[['r',tt("רדיוס")]],
+ line:[['len',tt("אורך")]],
  free:[]
 };
 const DEF={rect:{w:4,h:3},tri:{a:4,b:3,c:5},trap:{a:5,b:3,h:2.5,o:1},reg:{n:5,s:2},L:{w:6,h:5,cw:2.5,ch:2},
@@ -363,10 +396,44 @@ const PICK_ICON={
 
 const fmt=v=>(Math.round(v*100)/100).toFixed(2);
 const num=v=>{const n=parseFloat(String(v).trim().replace(',','.'));return isFinite(n)?n:null};
+/* ---------- units: everything is stored in meters; 'ft' only changes display and input ---------- */
+const UNITS=(()=>{try{return localStorage.getItem('sirtuti.units')==='ft'?'ft':'m'}catch(e){return 'm'}})();
+const IMP=UNITS==='ft',FT=0.3048,IN=0.0254,SQFT=10.7639104;
+const r2=v=>Math.round(v*1000)/1000;
+function fL(m){ // length for drawings/tables (no unit word in metric)
+  if(!IMP) return fmt(m);
+  const neg=m<0; let t=Math.round(Math.abs(m)/IN); const ft=Math.floor(t/12),inch=t%12;
+  return (neg?'-':'')+(ft?ft+'′':'')+(ft&&inch?' ':'')+(inch||!ft?inch+'″':'');
+}
+const fA=a=>IMP?(Math.round(a*SQFT*10)/10).toFixed(1):fmt(a);
+const uA=()=>IMP?'ft²':tt("מ״ר");
+const uL=()=>IMP?'ft':tt("מ׳");
+const fLU=m=>IMP?fL(m):fmt(m)+' '+uL();
+const fAU=a=>fA(a)+' '+uA();
+function dispLen(m){ // value shown in an input
+  if(!IMP) return String(r2(m));
+  const neg=m<0; let t=Math.round(Math.abs(m)/IN); const ft=Math.floor(t/12),inch=t%12;
+  return (neg?'-':'')+ft+"' "+inch+'"';
+}
+function parseLen(str){ // input -> meters
+  const v=String(str).trim().replace(/,/g,'.');
+  if(!IMP) return num(v);
+  const m=v.match(/^(-?)\s*(\d+(?:\.\d+)?)\s*('|′|ft|feet)?\s*(?:(\d+(?:\.\d+)?)\s*("|″|''|in|inch|inches)?)?\s*$/i);
+  if(!m) return null;
+  const sign=m[1]?-1:1,a=parseFloat(m[2]),b=m[4]!=null?parseFloat(m[4]):null;
+  if(b==null&&/^("|″|''|in)/i.test(m[3]||'')) return null;
+  if(b==null&&!m[3]&&/("|″|in)\s*$/i.test(v)) return sign*a*IN; // 30"
+  return sign*(a*FT+(b||0)*IN);
+}
+const snapLen=d=>IMP?Math.round(d/IN)*IN:Math.round(d*20)/20;   // 1 inch or 5 cm
+const niceDef=m=>IMP?Math.max(1,Math.round(m/FT))*FT:m;
+$('#totalBtn small').textContent=IMP?'ft² '+tt("סה״כ"):tt("מ״ר סה״כ");
+
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const normRot=a=>((Math.round(a*10)/10)%360+360)%360;
-const dateStr=t=>new Date(t).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});
+const LOCALE=LANG==='he'?'he-IL':LANG==='fr'?'fr-FR':'en-US';
+const dateStr=t=>new Date(t).toLocaleDateString(LOCALE,{day:'numeric',month:'numeric',year:'2-digit'});
 
 /* ---------- geometry ---------- */
 function localGeom(s){
@@ -375,19 +442,19 @@ function localGeom(s){
     case 'rect': pts=[[0,0],[p.w,0],[p.w,p.h],[0,p.h]]; break;
     case 'tri': {
       const a=p.a,b=p.b,c=p.c; const x=(a*a+c*c-b*b)/(2*a); let y2=c*c-x*x;
-      if(!(a<b+c&&b<a+c&&c<a+b)){err='שלוש הצלעות האלה לא יוצרות משולש: כל צלע צריכה להיות קצרה מסכום שתי האחרות.';}
+      if(!(a<b+c&&b<a+c&&c<a+b)){err=tt("שלוש הצלעות האלה לא יוצרות משולש: כל צלע צריכה להיות קצרה מסכום שתי האחרות.");}
       pts=[[0,0],[a,0],[x,-Math.sqrt(Math.max(y2,0))]]; break; }
     case 'trap': pts=[[0,0],[p.a,0],[p.o+p.b,-p.h],[p.o,-p.h]]; break;
     case 'reg': { const n=Math.round(p.n),R=p.s/(2*Math.sin(Math.PI/n));
       for(let i=0;i<n;i++){const t=Math.PI/2+Math.PI/n+2*Math.PI*i/n;pts.push([R*Math.cos(t),R*Math.sin(t)]);} break; }
     case 'L': { const {w,h}=p; let cw=p.cw,ch=p.ch;
-      if(cw>=w||ch>=h){err='מידות החיתוך צריכות להיות קטנות מהמידות הכוללות.';cw=Math.min(cw,w*.98);ch=Math.min(ch,h*.98);}
+      if(cw>=w||ch>=h){err=tt("מידות החיתוך צריכות להיות קטנות מהמידות הכוללות.");cw=Math.min(cw,w*.98);ch=Math.min(ch,h*.98);}
       pts=[[0,0],[w-cw,0],[w-cw,ch],[w,ch],[w,h],[0,h]]; break; }
     case 'free': { let x=0,y=0,hd=0; pts=[[0,0]];
       p.segs.forEach(g=>{x+=g.len*Math.cos(hd);y+=g.len*Math.sin(hd);pts.push([x,y]);hd+=(180-g.ang)*Math.PI/180;});
-      if(p.open){ closed=false; if(pts.length<2) err='צריך לפחות צלע אחת.'; }
+      if(p.open){ closed=false; if(pts.length<2) err=tt("צריך לפחות צלע אחת."); }
       else{ closeLen=Math.hypot(x,y); if(closeLen<1e-6) pts.pop();
-        if(pts.length<3) err='צריך לפחות שתי צלעות.'; }
+        if(pts.length<3) err=tt("צריך לפחות שתי צלעות."); }
       break; }
     case 'circle': circle=p.r; pts=[[-p.r,-p.r],[p.r,-p.r],[p.r,p.r],[-p.r,p.r]]; break;
     case 'line': pts=[[0,0],[p.len,0]]; closed=false; break;
@@ -449,7 +516,7 @@ function shapeSVG(s,T,o){
       else if(ny>0||(Math.abs(ny)<1e-6&&nx>0)){nx=-nx;ny=-ny;}
       const off=fs*.75+5,x=(a[0]+b[0])/2+nx*off,y=(a[1]+b[1])/2+ny*off;
       let ang=Math.atan2(dy,dx)*180/Math.PI; if(ang>90)ang-=180; if(ang<-90)ang+=180;
-      lab+=`<text class="el" x="${x.toFixed(1)}" y="${y.toFixed(1)}" transform="rotate(${ang.toFixed(2)} ${x.toFixed(1)} ${y.toFixed(1)})" font-size="${fs}" text-anchor="middle" dominant-baseline="central" stroke-width="4">${fmt(L)}</text>`;
+      lab+=`<text class="el" x="${x.toFixed(1)}" y="${y.toFixed(1)}" transform="rotate(${ang.toFixed(2)} ${x.toFixed(1)} ${y.toFixed(1)})" font-size="${fs}" text-anchor="middle" dominant-baseline="central" stroke-width="4">${fL(L)}</text>`;
     }
   }
   // centre label
@@ -458,22 +525,22 @@ function shapeSVG(s,T,o){
     const c=g.circle?C:centroid(P);
     const bw=Math.min(g.hw,g.hh)*2*T.k;
     let lines=[]; const showA=s.showArea!==false;
-    if(!o.exp&&bw<70){ if(showA) lines=[['ca',fmt(m.area)+' מ״ר',fs*.95]]; }
+    if(!o.exp&&bw<70){ if(showA) lines=[['ca',fAU(m.area),fs*.95]]; }
     else{
       if(nm) lines.push(['cn',nm,fs*1.1]);
-      if(showA) lines.push(['ca',fmt(m.area)+' מ״ר',fs*1.05]);
-      if(s.showPer!==false) lines.push(['cp','היקף '+fmt(m.per)+' מ׳',fs*.88]);
-      if(g.circle) lines.push(['cp','רדיוס '+fmt(g.circle)+' מ׳',fs*.88]);
+      if(showA) lines.push(['ca',fAU(m.area),fs*1.05]);
+      if(s.showPer!==false) lines.push(['cp',tt("היקף ")+fLU(m.per),fs*.88]);
+      if(g.circle) lines.push(['cp',tt("רדיוס ")+fLU(g.circle),fs*.88]);
     }
     const lh=1.32; let tot=lines.reduce((t,l)=>t+l[2]*lh,0),y=c[1]-tot/2;
-    lines.forEach(([cl,t,f])=>{y+=f*lh/2;lab+=`<text class="${cl}" x="${c[0].toFixed(1)}" y="${y.toFixed(1)}" font-size="${f.toFixed(1)}" text-anchor="middle" dominant-baseline="central" direction="rtl" stroke-width="4">${t}</text>`;y+=f*lh/2;});
+    lines.forEach(([cl,t,f])=>{y+=f*lh/2;lab+=`<text class="${cl}" x="${c[0].toFixed(1)}" y="${y.toFixed(1)}" font-size="${f.toFixed(1)}" text-anchor="middle" dominant-baseline="central" direction="${RTL?'rtl':'ltr'}" stroke-width="4">${t}</text>`;y+=f*lh/2;});
   }else if(nm){
     let bi=0,bl=-1; for(let i=0;i<P.length-1;i++){const l=dist(P[i],P[i+1]);if(l>bl){bl=l;bi=i;}}
     const a=P[bi],b=P[bi+1],dx=b[0]-a[0],dy=b[1]-a[1],sl=Math.hypot(dx,dy)||1;
     let nx=dy/sl,ny=-dx/sl; if(ny>0||(Math.abs(ny)<1e-6&&nx>0)){nx=-nx;ny=-ny;}
     const x=(a[0]+b[0])/2-nx*(fs*.8+5),y=(a[1]+b[1])/2-ny*(fs*.8+5);
     let ang=Math.atan2(dy,dx)*180/Math.PI; if(ang>90)ang-=180; if(ang<-90)ang+=180;
-    lab+=`<text class="cp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" transform="rotate(${ang.toFixed(2)} ${x.toFixed(1)} ${y.toFixed(1)})" font-size="${fs*.9}" text-anchor="middle" dominant-baseline="central" direction="rtl" stroke-width="4">${nm}</text>`;
+    lab+=`<text class="cp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" transform="rotate(${ang.toFixed(2)} ${x.toFixed(1)} ${y.toFixed(1)})" font-size="${fs*.9}" text-anchor="middle" dominant-baseline="central" direction="${RTL?'rtl':'ltr'}" stroke-width="4">${nm}</text>`;
   }
   return {body,lab};
 }
@@ -497,11 +564,12 @@ function selSVG(s,T){
   return o;
 }
 function gridSVG(T,W,H){
-  const steps=[0.1,0.25,0.5,1,2,5,10,25,50,100];const st=steps.find(x=>x*T.k>=16)||200;
-  const maj=st<1?1:st*5;let mi='',ma='';
+  const U=IMP?FT:1,base=IMP?[1/12,0.25,0.5,1,2,5,10,25,50,100]:[0.1,0.25,0.5,1,2,5,10,25,50,100];
+  const st=(base.find(x=>x*U*T.k>=16)||200)*U;
+  const maj=st<U?U:st*5;let mi='',ma='';
   const xs=Math.floor(-T.ox/T.k/st)*st,ys=Math.floor(-T.oy/T.k/st)*st;
-  for(let x=xs;x*T.k+T.ox<=W;x+=st){const X=Math.round(x*T.k+T.ox)+.5,isM=Math.abs(x/maj-Math.round(x/maj))<1e-6;(isM?(ma+=`M${X} 0V${H}`):(mi+=`M${X} 0V${H}`));}
-  for(let y=ys;y*T.k+T.oy<=H;y+=st){const Y=Math.round(y*T.k+T.oy)+.5,isM=Math.abs(y/maj-Math.round(y/maj))<1e-6;(isM?(ma+=`M0 ${Y}H${W}`):(mi+=`M0 ${Y}H${W}`));}
+  for(let x=xs;x*T.k+T.ox<=W;x+=st){const X=Math.round(x*T.k+T.ox)+.5,isM=Math.abs(x/maj-Math.round(x/maj))<1e-4;(isM?(ma+=`M${X} 0V${H}`):(mi+=`M${X} 0V${H}`));}
+  for(let y=ys;y*T.k+T.oy<=H;y+=st){const Y=Math.round(y*T.k+T.oy)+.5,isM=Math.abs(y/maj-Math.round(y/maj))<1e-4;(isM?(ma+=`M0 ${Y}H${W}`):(mi+=`M0 ${Y}H${W}`));}
   return `<path class="g-min" d="${mi}"/><path class="g-maj" d="${ma}"/>`;
 }
 
@@ -514,14 +582,14 @@ const cur=()=>sk.shapes.find(s=>s.id===sel)||null;
 const isMobile=()=>!matchMedia('(min-width:900px)').matches;
 
 function sampleSketch(){
-  return {id:'s'+uid(),name:'דוגמה: פרגולה',example:true,updated:Date.now(),shapes:[
-    {id:uid(),kind:'rect',name:'פרגולה ראשית',p:{w:4.5,h:4.4},x:2.25,y:2.2,rot:0,color:'#4f6272'},
-    {id:uid(),kind:'rect',name:'שלוחה / מעבר',p:{w:7.5,h:1.5},x:8.25,y:0.75,rot:0,color:'#2f6fb0'},
-    {id:uid(),kind:'line',name:'הפרש',p:{len:2.9},x:4.8,y:2.95,rot:90,color:'#4f6272'}
+  return {id:'s'+uid(),name:tt("דוגמה: פרגולה"),example:true,updated:Date.now(),shapes:[
+    {id:uid(),kind:'rect',name:tt("פרגולה ראשית"),p:{w:4.5,h:4.4},x:2.25,y:2.2,rot:0,color:'#4f6272'},
+    {id:uid(),kind:'rect',name:tt("שלוחה / מעבר"),p:{w:7.5,h:1.5},x:8.25,y:0.75,rot:0,color:'#2f6fb0'},
+    {id:uid(),kind:'line',name:tt("הפרש"),p:{len:2.9},x:4.8,y:2.95,rot:90,color:'#4f6272'}
   ]};
 }
 function newSketch(){
-  return {id:'s'+uid(),name:'סקיצה '+dateStr(Date.now()),updated:Date.now(),shapes:[]};
+  return {id:'s'+uid(),name:tt("סקיצה ")+dateStr(Date.now()),updated:Date.now(),shapes:[]};
 }
 
 /* ---------- storage ---------- */
@@ -552,8 +620,8 @@ const folder={
   supported(){return IS_TAURI&&!!this.fs()&&!!(window.__TAURI__.dialog)},
   on(){return this.supported()&&!!this.path},
   join(n){const p=this.path,sep=p.includes('\\')?'\\':'/';return p.replace(/[\\/]+$/,'')+sep+n;},
-  fname(s){const nm=(s.name||'סקיצה').replace(/[\\/:*?"<>|\u0000-\u001f]+/g,' ').trim().slice(0,60)||'סקיצה';return nm+' ('+String(s.id).slice(-6)+').sirtuti.json';},
-  fail(){ if(!this.warned){this.warned=true;toast('השמירה לתיקייה נכשלה. בדוק שהתיקייה קיימת');} },
+  fname(s){const nm=(s.name||tt("סקיצה")).replace(/[\\/:*?"<>|\u0000-\u001f]+/g,' ').trim().slice(0,60)||tt("סקיצה");return nm+' ('+String(s.id).slice(-6)+').sirtuti.json';},
+  fail(){ if(!this.warned){this.warned=true;toast(tt("השמירה לתיקייה נכשלה. בדוק שהתיקייה קיימת"));} },
   async write(s){
     if(!this.on()) return;
     const fs=this.fs(),m=this.map(),n=this.fname(s),old=m[s.id],at=this.path;
@@ -587,14 +655,14 @@ const folder={
   async pushAll(){ for(const s of Object.values(local.all())) await this.write(s); },
   async choose(){
     try{
-      const p=await window.__TAURI__.dialog.open({directory:true,multiple:false,recursive:true,title:'בחירת תיקייה לשמירה אוטומטית'});
+      const p=await window.__TAURI__.dialog.open({directory:true,multiple:false,recursive:true,title:tt("בחירת תיקייה לשמירה אוטומטית")});
       if(!p||Array.isArray(p)) return false;
       this.path=p; this.setMap({}); this.warned=false;
       await this.pull(); await this.pushAll();
-      toast('נשמר. כל שינוי יישמר גם בתיקייה'); return true;
+      toast(tt("נשמר. כל שינוי יישמר גם בתיקייה")); return true;
     }catch(e){ this.fail(); return false; }
   },
-  stop(){ this.path=''; this.setMap({}); toast('השמירה לתיקייה הופסקה. הקבצים שכבר נשמרו נשארים שם'); }
+  stop(){ this.path=''; this.setMap({}); toast(tt("השמירה לתיקייה הופסקה. הקבצים שכבר נשמרו נשארים שם")); }
 };
 let syncSt='';
 const store={remote:null,
@@ -653,19 +721,19 @@ function setSync(st){ syncSt=st; if(!saving&&!saveT&&!sk.example) setStatus(save
 let saveT=null,saving=false,again=false;
 function setStatus(t){$('#status').textContent=t;}
 function savedText(){
-  if(store.mode==='claude') return 'נשמר בחשבון שלך';
-  if(store.mode==='firebase') return syncSt==='pending'?'נשמר · מסנכרן ל-Google…':syncSt==='err'?'נשמר במכשיר · הסנכרון ל-Google נכשל':'נשמר בחשבון Google';
-  return IS_TAURI?(folder.on()?'נשמר במחשב ובתיקייה':'נשמר במחשב הזה'):'נשמר בדפדפן הזה';
+  if(store.mode==='claude') return tt("נשמר בחשבון שלך");
+  if(store.mode==='firebase') return syncSt==='pending'?tt("נשמר · מסנכרן ל-Google…"):syncSt==='err'?tt("נשמר במכשיר · הסנכרון ל-Google נכשל"):tt("נשמר בחשבון Google");
+  return IS_TAURI?(folder.on()?tt("נשמר במחשב ובתיקייה"):tt("נשמר במחשב הזה")):tt("נשמר בדפדפן הזה");
 }
 function scheduleSave(){
-  sk.example=false;sk.updated=Date.now();setStatus('שומר…');
+  sk.example=false;sk.updated=Date.now();setStatus(tt("שומר…"));
   clearTimeout(saveT);saveT=setTimeout(doSave,700);
 }
 async function doSave(){
   saveT=null;
   if(saving){again=true;return;} saving=true;
   try{await store.save(sk);saving=false;setStatus(savedText());}
-  catch(e){saving=false;setStatus(e&&e.code==='quota_exceeded'?'אין מקום לשמירה: מחק סקיצות ישנות':'השמירה נכשלה, ננסה שוב בשינוי הבא');}
+  catch(e){saving=false;setStatus(e&&e.code==='quota_exceeded'?tt("אין מקום לשמירה: מחק סקיצות ישנות"):tt("השמירה נכשלה, ננסה שוב בשינוי הבא"));}
   if(again){again=false;doSave();}
 }
 
@@ -708,9 +776,9 @@ const cloud={fb:null,auth:null,fs:null,user:null,failed:false,
     else if(!sk.example){ store.save(sk); setStatus(savedText()); }
   },
   async signIn(){
-    if(!this.fb){toast('אין חיבור ל-Google כרגע');return;}
+    if(!this.fb){toast(tt("אין חיבור ל-Google כרגע"));return;}
     const p=new this.fb.GoogleAuthProvider(); p.setCustomParameters({prompt:'select_account'});
-    try{ await this.fb.signInWithPopup(this.auth,p); closeModal(); toast('מחובר. הסקיצות יישמרו בחשבון Google'); }
+    try{ await this.fb.signInWithPopup(this.auth,p); closeModal(); toast(tt("מחובר. הסקיצות יישמרו בחשבון Google")); }
     catch(e){
       const c=(e&&e.code)||'';
       if(/popup-blocked|operation-not-supported/.test(c)) return this.fb.signInWithRedirect(this.auth,p);
@@ -718,28 +786,28 @@ const cloud={fb:null,auth:null,fs:null,user:null,failed:false,
       toast(authErr(e));
     }
   },
-  async signOut(){ await this.fb.signOut(this.auth); closeModal(); toast('התנתקת. הסקיצות נשארות גם במכשיר הזה'); }
+  async signOut(){ await this.fb.signOut(this.auth); closeModal(); toast(tt("התנתקת. הסקיצות נשארות גם במכשיר הזה")); }
 };
 function authErr(e){
   const c=(e&&e.code)||'';
-  if(c.includes('unauthorized-domain')) return 'הכתובת הזו לא מאושרת ב-Firebase (Authorized domains)';
-  if(c.includes('network')) return 'אין חיבור לאינטרנט';
-  return 'ההתחברות נכשלה';
+  if(c.includes('unauthorized-domain')) return tt("הכתובת הזו לא מאושרת ב-Firebase (Authorized domains)");
+  if(c.includes('network')) return tt("אין חיבור לאינטרנט");
+  return tt("ההתחברות נכשלה");
 }
 function updAcct(){
   const b=$('#acctBtn'),u=cloud.user; b.classList.toggle('on',!!u);
-  b.title=u?('מחובר: '+(u.email||'')):'התחברות לחשבון Google';
+  b.title=u?(tt("מחובר: ")+(u.email||'')):tt("התחברות לחשבון Google");
 }
 function showAcct(){
-  const u=cloud.user,x=`<button class="ib" data-close aria-label="סגירה">${ic('x')}</button>`;
-  if(u) modal(`<h2>חשבון Google${x}</h2>
+  const u=cloud.user,x=`<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button>`;
+  if(u) modal(`<h2>${tt("חשבון Google")}${x}</h2>
     <div class="acct"><b>${esc(u.displayName||'')}</b><span dir="ltr">${esc(u.email||'')}</span></div>
-    <div class="hint">הסקיצות נשמרות בחשבון שלך ומסתנכרנות בין כל המכשירים שמחוברים אליו. גם בלי אינטרנט אפשר לעבוד, והסנכרון ישלים כשיחזור החיבור.</div>
-    <div class="btnrow"><button class="chip" id="signOut">התנתקות</button></div>`);
-  else modal(`<h2>חשבון Google${x}</h2>
-    <div class="hint" style="font-size:14.5px">התחבר כדי לשמור את הסקיצות בחשבון Google שלך ולפתוח אותן מכל מכשיר. בלי התחברות הן נשמרות רק ${IS_TAURI?'במחשב הזה':'בדפדפן הזה'}.</div>
-    ${cloud.failed?'<div class="err">לא ניתן להתחבר ל-Google כרגע. בדוק את החיבור לאינטרנט ונסה שוב.</div>':''}
-    <div class="btnrow"><button class="primary" id="signIn">התחברות עם Google</button></div>`);
+    <div class="hint">${tt("הסקיצות נשמרות בחשבון שלך ומסתנכרנות בין כל המכשירים שמחוברים אליו. גם בלי אינטרנט אפשר לעבוד, והסנכרון ישלים כשיחזור החיבור.")}</div>
+    <div class="btnrow"><button class="chip" id="signOut">${tt("התנתקות")}</button></div>`);
+  else modal(`<h2>${tt("חשבון Google")}${x}</h2>
+    <div class="hint" style="font-size:14.5px">${tt("התחבר כדי לשמור את הסקיצות בחשבון Google שלך ולפתוח אותן מכל מכשיר. בלי התחברות הן נשמרות רק")} ${IS_TAURI?tt("במחשב הזה"):tt("בדפדפן הזה")}.</div>
+    ${cloud.failed?tt("<div class=\"err\">לא ניתן להתחבר ל-Google כרגע. בדוק את החיבור לאינטרנט ונסה שוב.</div>"):''}
+    <div class="btnrow"><button class="primary" id="signIn">${tt("התחברות עם Google")}</button></div>`);
   const si=$('#signIn'),so=$('#signOut');
   if(si) si.onclick=()=>cloud.signIn(); if(so) so.onclick=()=>cloud.signOut();
 }
@@ -765,10 +833,10 @@ function render(){
   const s=cur();
   svg.innerHTML=gridSVG(view,W,H)+bodies+labs+(s?selSVG(s,view):'')+drawOverlay();
   let tot=0; sk.shapes.forEach(x=>{if(x.include!==false&&!isOpen(x)){tot+=measures(x,geom(x)).area;}});
-  $('#totalA').textContent=fmt(tot);
+  $('#totalA').textContent=fA(tot);
   $('#empty').hidden=sk.shapes.length>0;
-  const L=[0.25,0.5,1,2,5,10,20,50,100,200].find(v=>v*view.k>=50)||500;
-  $('#scalebar i').style.width=(L*view.k)+'px'; $('#scalebar span').textContent=(L<1?L.toFixed(2):L)+' מ׳';
+  const SU=IMP?FT:1,L=([0.25,0.5,1,2,5,10,20,50,100,200].find(v=>v*SU*view.k>=50)||500)*SU;
+  $('#scalebar i').style.width=(L*view.k)+'px'; $('#scalebar span').textContent=IMP?fL(L):(L<1?L.toFixed(2):L)+tt(" מ׳");
 }
 function fit(){
   const r=svg.getBoundingClientRect(); W=r.width; H=r.height;
@@ -782,8 +850,8 @@ function fit(){
 }
 
 /* ---------- panel ---------- */
-function fieldHTML(f,label,v,unit){
-  return `<label class="fld"><span>${label}</span><span class="inp"><input id="f-${f}" data-f="${f}" inputmode="decimal" dir="ltr" value="${v}">${unit?`<em>${unit}</em>`:''}</span></label>`;
+function fieldHTML(f,label,v,unit,txt){
+  return `<label class="fld"><span>${label}</span><span class="inp"><input id="f-${f}" data-f="${f}" inputmode="${txt?'text':'decimal'}" dir="ltr" value="${esc(v)}">${unit?`<em>${unit}</em>`:''}</span></label>`;
 }
 function openPanel(){
   const s=cur();
@@ -791,54 +859,54 @@ function openPanel(){
   if(!s){ if(!sheet.hidden){sheet.hidden=true;mainEl.classList.remove('has-panel');} $('#addGroup').hidden=!!draw; return; }
   sheet.hidden=false; mainEl.classList.add('has-panel'); $('#addGroup').hidden=!!draw||isMobile();
   let h=`<div class="grab"></div><div class="kind">${KIND_LABEL[s.kind]}</div>
-  <div class="shead"><input id="f-name" placeholder="שם (למשל: סלון)" value="${esc(s.name)}" aria-label="שם הצורה"><button class="ib" data-act="close" aria-label="סגירה">${ic('x')}</button></div>`;
+  <div class="shead"><input id="f-name" placeholder="${esc(tt("שם (למשל: סלון)"))}" value="${esc(s.name)}" aria-label="${esc(tt("שם הצורה"))}"><button class="ib" data-act="close" aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></div>`;
   if(s.kind==='free'){
     const op=!!s.p.open,minS=op?1:2;
-    h+=`<div class="row" style="margin:0 0 10px"><label class="tg"><input type="checkbox" id="t-closed" ${op?'':'checked'}>צורה סגורה (חוזרת לנקודת ההתחלה)</label></div>`;
-    h+=`<div class="seghead"><span></span><span>אורך צלע (מ׳)</span><span>זווית אחריה (°)</span><span></span></div><div class="segs">`;
+    h+=`<div class="row" style="margin:0 0 10px"><label class="tg"><input type="checkbox" id="t-closed" ${op?'':'checked'}>${tt("צורה סגורה (חוזרת לנקודת ההתחלה)")}</label></div>`;
+    h+=`<div class="seghead"><span></span><span>${tt("אורך צלע (")}${uL()})</span><span>${tt("זווית אחריה (°)")}</span><span></span></div><div class="segs">`;
     s.p.segs.forEach((g,i)=>{
       const last=i===s.p.segs.length-1;
-      h+=`<div class="seg"><b>${i+1}</b><span class="inp"><input data-seg="${i}" data-k="len" id="sg-l${i}" inputmode="decimal" dir="ltr" value="${g.len}"></span>`+
-        (last?`<span class="hint" style="margin:0">${op?'סוף הקו':'→ ואז סגירה'}</span>`:`<span class="inp"><input data-seg="${i}" data-k="ang" id="sg-a${i}" inputmode="decimal" dir="ltr" value="${g.ang}"></span>`)+
-        `<button class="x" data-act="segdel" data-i="${i}" aria-label="מחיקת צלע" ${s.p.segs.length<=minS?'disabled':''}>${ic('x')}</button></div>`;
+      h+=`<div class="seg"><b>${i+1}</b><span class="inp"><input data-seg="${i}" data-k="len" id="sg-l${i}" inputmode="${IMP?'text':'decimal'}" dir="ltr" value="${dispLen(g.len)}"></span>`+
+        (last?`<span class="hint" style="margin:0">${op?tt("סוף הקו"):tt("→ ואז סגירה")}</span>`:`<span class="inp"><input data-seg="${i}" data-k="ang" id="sg-a${i}" inputmode="decimal" dir="ltr" value="${g.ang}"></span>`)+
+        `<button class="x" data-act="segdel" data-i="${i}" aria-label="${esc(tt("מחיקת צלע"))}" ${s.p.segs.length<=minS?'disabled':''}>${ic('x')}</button></div>`;
     });
-    h+=`</div><div class="row" style="margin-top:8px"><button class="chip" data-act="segadd">${ic('plus')} צלע</button>${op?'':'<span class="closing">צלע סוגרת: <b id="p-close"></b> מ׳</span>'}</div>
-    <div class="hint">${op?'קו פתוח: מתחיל ונגמר איפה שתחליט (קיר, גדר, צנרת). ':''}כשמקלידים באחת השורות, הצלע שלה מסומנת בשרטוט. הזווית היא הפנימית בפינה שאחרי הצלע: 90° לפינה רגילה, 270° לפינה פנימית${op?'.':', והצלע האחרונה נסגרת לבד לנקודת ההתחלה.'}</div>`;
+    h+=`</div><div class="row" style="margin-top:8px"><button class="chip" data-act="segadd">${ic('plus')} ${tt("צלע")}</button>${op?'':tt("<span class=\"closing\">צלע סוגרת: <b id=\"p-close\"></b></span>")}</div>
+    <div class="hint">${op?tt("קו פתוח: מתחיל ונגמר איפה שתחליט (קיר, גדר, צנרת). "):''}${tt("כשמקלידים באחת השורות, הצלע שלה מסומנת בשרטוט. הזווית היא הפנימית בפינה שאחרי הצלע: 90° לפינה רגילה, 270° לפינה פנימית")}${op?'.':tt(", והצלע האחרונה נסגרת לבד לנקודת ההתחלה.")}</div>`;
   }else{
-    h+=`<div class="fields">`+FIELDS[s.kind].map(([f,l])=>fieldHTML(f,l,s.p[f],f==='n'?'':'מ׳')).join('')+`</div>`;
-    if(s.kind==='trap') h+=`<div class="row"><button class="chip" data-act="sym">טרפז שווה שוקיים</button></div>`;
+    h+=`<div class="fields">`+FIELDS[s.kind].map(([f,l])=>fieldHTML(f,l,f==='n'?s.p[f]:dispLen(s.p[f]),f==='n'||IMP?'':tt("מ׳"),f!=='n'&&IMP)).join('')+`</div>`;
+    if(s.kind==='trap') h+=`<div class="row"><button class="chip" data-act="sym">${tt("טרפז שווה שוקיים")}</button></div>`;
   }
   h+=`<div class="err" id="p-err" hidden></div>`;
-  if(isOpen(s)){ if(s.kind!=='line') h+=`<div class="info"><div><small>אורך כולל</small><b id="p-per"></b></div></div>`; }
-  else h+=`<div class="info"><div><small>שטח</small><b id="p-area"></b></div><div><small>היקף</small><b id="p-per"></b></div></div>`;
-  if(s.kind!=='circle') h+=`<div class="row rot"><span class="lbl">סיבוב</span><span class="inp"><input id="f-rot" data-f="rot" inputmode="decimal" dir="ltr" value="${s.rot}"><em>°</em></span>
-    <button class="chip" data-act="r-15" aria-label="סיבוב נגד כיוון השעון">${ic('ccw')}15°</button><button class="chip" data-act="r+15" aria-label="סיבוב עם כיוון השעון">${ic('cw')}15°</button><button class="chip" data-act="r90">90°</button></div>`;
-  h+=`<div class="row"><span class="lbl">צבע</span>`+PALETTE.map(c=>`<button class="sw${c===s.color?' on':''}" data-color="${c}" style="background:${c}" aria-label="צבע"></button>`).join('')+`</div>`;
+  if(isOpen(s)){ if(s.kind!=='line') h+=`<div class="info"><div><small>${tt("אורך כולל")}</small><b id="p-per"></b></div></div>`; }
+  else h+=`<div class="info"><div><small>${tt("שטח")}</small><b id="p-area"></b></div><div><small>${tt("היקף")}</small><b id="p-per"></b></div></div>`;
+  if(s.kind!=='circle') h+=`<div class="row rot"><span class="lbl">${tt("סיבוב")}</span><span class="inp"><input id="f-rot" data-f="rot" inputmode="decimal" dir="ltr" value="${s.rot}"><em>°</em></span>
+    <button class="chip" data-act="r-15" aria-label="${esc(tt("סיבוב נגד כיוון השעון"))}">${ic('ccw')}15°</button><button class="chip" data-act="r+15" aria-label="${esc(tt("סיבוב עם כיוון השעון"))}">${ic('cw')}15°</button><button class="chip" data-act="r90">90°</button></div>`;
+  h+=`<div class="row"><span class="lbl">${tt("צבע")}</span>`+PALETTE.map(c=>`<button class="sw${c===s.color?' on':''}" data-color="${c}" style="background:${c}" aria-label="${esc(tt("צבע"))}"></button>`).join('')+`</div>`;
   h+=`<div class="row" style="gap:14px">`;
-  if(s.kind!=='circle') h+=`<label class="tg"><input type="checkbox" id="t-labels" data-t="labels" ${s.labels!==false?'checked':''}>מידות צלעות</label>`;
-  if(!isOpen(s)) h+=`<label class="tg"><input type="checkbox" id="t-area" data-t="showArea" ${s.showArea!==false?'checked':''}>שטח בשרטוט</label><label class="tg"><input type="checkbox" id="t-per" data-t="showPer" ${s.showPer!==false?'checked':''}>היקף בשרטוט</label><label class="tg"><input type="checkbox" id="t-inc" data-t="include" ${s.include!==false?'checked':''}>כלול בסה״כ</label>`;
-  if(['tri','trap','L','free'].includes(s.kind)) h+=`<label class="tg"><input type="checkbox" id="t-flip" data-t="flip" ${s.flip?'checked':''}>היפוך (מראה)</label>`;
-  h+=`</div><div class="row"><button class="chip" data-act="dup">${ic('copy')} שכפול</button><button class="chip" data-act="front">${ic('up')} הבא לחזית</button><button class="chip" data-act="back">${ic('down')} שלח לרקע</button><button class="chip danger" data-act="del">${ic('trash')} מחיקה</button></div>`;
+  if(s.kind!=='circle') h+=`<label class="tg"><input type="checkbox" id="t-labels" data-t="labels" ${s.labels!==false?'checked':''}>${tt("מידות צלעות")}</label>`;
+  if(!isOpen(s)) h+=`<label class="tg"><input type="checkbox" id="t-area" data-t="showArea" ${s.showArea!==false?'checked':''}>${tt("שטח בשרטוט")}</label><label class="tg"><input type="checkbox" id="t-per" data-t="showPer" ${s.showPer!==false?'checked':''}>${tt("היקף בשרטוט")}</label><label class="tg"><input type="checkbox" id="t-inc" data-t="include" ${s.include!==false?'checked':''}>${tt("כלול בסה״כ")}</label>`;
+  if(['tri','trap','L','free'].includes(s.kind)) h+=`<label class="tg"><input type="checkbox" id="t-flip" data-t="flip" ${s.flip?'checked':''}>${tt("היפוך (מראה)")}</label>`;
+  h+=`</div><div class="row"><button class="chip" data-act="dup">${ic('copy')} ${tt("שכפול")}</button><button class="chip" data-act="front">${ic('up')} ${tt("הבא לחזית")}</button><button class="chip" data-act="back">${ic('down')} ${tt("שלח לרקע")}</button><button class="chip danger" data-act="del">${ic('trash')} ${tt("מחיקה")}</button></div>`;
   sheet.innerHTML=h; updInfo();
 }
 function updInfo(){
   const s=cur(); if(!s) return; const g=geom(s),m=measures(s,g);
-  const a=$('#p-area'); if(a) a.textContent=fmt(m.area)+' מ״ר';
-  const pe=$('#p-per'); if(pe) pe.textContent=fmt(m.per)+' מ׳';
-  const c=$('#p-close'); if(c) c.textContent=fmt(g.closeLen||0);
+  const a=$('#p-area'); if(a) a.textContent=fAU(m.area);
+  const pe=$('#p-per'); if(pe) pe.textContent=fLU(m.per);
+  const c=$('#p-close'); if(c) c.textContent=fLU(g.closeLen||0);
   const e=$('#p-err'); e.hidden=!g.err; e.textContent=g.err;
 }
 sheet.addEventListener('input',e=>{
   const t=e.target,s=cur(); if(!s) return;
   if(t.id==='f-name'){s.name=t.value;}
   else if(t.dataset.f){
-    const f=t.dataset.f,v=num(t.value); if(v===null) return;
+    const f=t.dataset.f,v=(f==='rot'||f==='n')?num(t.value):parseLen(t.value); if(v===null) return;
     if(f==='rot') s.rot=normRot(v);
     else if(f==='n'){ if(v<3||v>12) return; s.p.n=Math.round(v); }
     else if(f==='o') s.p.o=v;
     else { if(v<=0) return; s.p[f]=v; }
   }else if(t.dataset.seg!=null){
-    const i=+t.dataset.seg,k=t.dataset.k,v=num(t.value); if(v===null) return;
+    const i=+t.dataset.seg,k=t.dataset.k,v=k==='len'?parseLen(t.value):num(t.value); if(v===null) return;
     if(k==='len'&&v<=0) return; if(k==='ang'&&(v<=0||v>=360)) return;
     s.p.segs[i][k]=v;
   }else return;
@@ -863,19 +931,19 @@ sheet.addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return; const s=cur(); if(!s) return;
   if(b.dataset.color){ s.color=b.dataset.color; sheet.querySelectorAll('.sw').forEach(x=>x.classList.toggle('on',x===b)); render(); commit(); return; }
   const a=b.dataset.act; if(!a) return;
-  if(a!=='del'){const d=sheet.querySelector('[data-act="del"].armed'); if(d){d.classList.remove('armed');d.innerHTML=ic('trash')+' מחיקה';}}
+  if(a!=='del'){const d=sheet.querySelector('[data-act="del"].armed'); if(d){d.classList.remove('armed');d.innerHTML=ic('trash')+tt(" מחיקה");}}
   switch(a){
     case 'close': select(null); return;
     case 'r-15': case 'r+15': case 'r90':
       s.rot=normRot(s.rot+(a==='r-15'?-15:a==='r+15'?15:90)); $('#f-rot').value=s.rot; break;
-    case 'sym': s.p.o=Math.round((s.p.a-s.p.b)/2*1000)/1000; $('#f-o').value=s.p.o; break;
-    case 'segadd': s.p.segs.push({len:2,ang:90}); render(); commit(); openPanel(); return;
+    case 'sym': s.p.o=Math.round((s.p.a-s.p.b)/2*1000)/1000; $('#f-o').value=dispLen(s.p.o); break;
+    case 'segadd': s.p.segs.push({len:niceDef(2),ang:90}); render(); commit(); openPanel(); return;
     case 'segdel': if(s.p.segs.length>(s.p.open?1:2)){s.p.segs.splice(+b.dataset.i,1);} render(); commit(); openPanel(); return;
-    case 'dup': { const c=JSON.parse(JSON.stringify(s)); c.id=uid(); c.x+=0.5; c.y+=0.5; c.name=s.name?s.name+' (עותק)':''; sk.shapes.push(c); commit(); select(c.id); return; }
+    case 'dup': { const c=JSON.parse(JSON.stringify(s)); c.id=uid(); c.x+=0.5; c.y+=0.5; c.name=s.name?s.name+tt(" (עותק)"):''; sk.shapes.push(c); commit(); select(c.id); return; }
     case 'front': { const i=sk.shapes.indexOf(s); sk.shapes.splice(i,1); sk.shapes.push(s); break; }
     case 'back': { const i=sk.shapes.indexOf(s); sk.shapes.splice(i,1); sk.shapes.unshift(s); break; }
     case 'del':
-      if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent='לחץ שוב למחיקה'; return; }
+      if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent=tt("לחץ שוב למחיקה"); return; }
       sk.shapes=sk.shapes.filter(x=>x!==s); sel=null; commit(); openPanel(); render(); return;
   }
   render(); updInfo(); commit();
@@ -913,7 +981,7 @@ function straighten(P,closed){
       const nl=sides.map((sd,i)=>sd.L-(Math.cos(hs[i])*lx+Math.sin(hs[i])*ly));
       if(nl.every((v,i)=>v>sides[i].L*0.4)) nl.forEach((v,i)=>sides[i].L=v);}
   }
-  sides.forEach(sd=>sd.L=Math.max(0.05,Math.round(sd.L*20)/20));
+  sides.forEach(sd=>sd.L=Math.max(IMP?IN:0.05,snapLen(sd.L)));
   const out=[[0,0]],cnt=closed?sides.length-1:sides.length;
   for(let i=0;i<cnt;i++){const l=out[out.length-1];out.push([l[0]+sides[i].L*Math.cos(hs[i]),l[1]+sides[i].L*Math.sin(hs[i])]);}
   const bb=Q=>{let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;Q.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);});return [(x0+x1)/2,(y0+y1)/2];};
@@ -929,7 +997,7 @@ function polyToShape(P,closed){
     segs.push({len:Math.round(dist(pts[i],pts[i+1])*100)/100,ang});
   }
   const cnt=sk.shapes.filter(x=>x.kind==='free'&&!!x.p.open===!closed).length+1;
-  const s={id:uid(),kind:'free',name:closed?'שרטוט '+cnt:'',p:{segs,open:!closed},x:0,y:0,rot:normRot(hs[0]*180/Math.PI),color:PALETTE[sk.shapes.length%PALETTE.length]};
+  const s={id:uid(),kind:'free',name:closed?tt("שרטוט ")+cnt:'',p:{segs,open:!closed},x:0,y:0,rot:normRot(hs[0]*180/Math.PI),color:PALETTE[sk.shapes.length%PALETTE.length]};
   const g=geom(s); s.x=Math.round((pts[0][0]-g.w[0][0])*1000)/1000; s.y=Math.round((pts[0][1]-g.w[0][1])*1000)/1000;
   return s;
 }
@@ -938,7 +1006,7 @@ function snapCand(w){
   if(draw.pts.length>=3&&dist(w,draw.pts[0])<thr*1.5) return {pt:draw.pts[0].slice(),start:true};
   if(magnet){let best=null,bd=thr;sk.shapes.forEach(s=>snapPts(s).forEach(q=>{const d=dist(w,q);if(d<bd){bd=d;best=q;}}));
     if(best) return {pt:best.slice()};}
-  if(L&&magnet){let d=dist(L,w),a=Math.atan2(w[1]-L[1],w[0]-L[0]);a=Math.round(a/(Math.PI/12))*(Math.PI/12);d=Math.round(d*20)/20;
+  if(L&&magnet){let d=dist(L,w),a=Math.atan2(w[1]-L[1],w[0]-L[0]);a=Math.round(a/(Math.PI/12))*(Math.PI/12);d=snapLen(d);
     return {pt:[L[0]+d*Math.cos(a),L[1]+d*Math.sin(a)]};}
   return {pt:w};
 }
@@ -947,7 +1015,7 @@ function drawOverlay(){
   const S=w=>[w[0]*view.k+view.ox,w[1]*view.k+view.oy],J=Q=>Q.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
   if(draw.stroke) return `<polyline class="dstroke" points="${J(draw.stroke.map(S))}"/>`;
   const P=draw.pts.map(S); let o='';
-  const lab=(a,b,L)=>{const x=(a[0]+b[0])/2,y=(a[1]+b[1])/2-12;return `<text class="ca" x="${x}" y="${y}" font-size="13" text-anchor="middle" stroke-width="4">${fmt(L)}</text>`;};
+  const lab=(a,b,L)=>{const x=(a[0]+b[0])/2,y=(a[1]+b[1])/2-12;return `<text class="ca" x="${x}" y="${y}" font-size="13" text-anchor="middle" stroke-width="4">${fL(L)}</text>`;};
   if(P.length>1) o+=`<polyline class="dline" points="${J(P)}"/>`;
   for(let i=0;i<P.length-1;i++) o+=lab(P[i],P[i+1],dist(draw.pts[i],draw.pts[i+1]));
   if(draw.prev){const q=S(draw.prev.pt);
@@ -964,16 +1032,16 @@ function updDrawBar(){
   $('#dUndo').hidden=$('#dDone').hidden=draw.mode!=='pts';
   $('#dUndo').disabled=!draw.pts.length; $('#dDone').disabled=draw.pts.length<2;
   $('#dhint').textContent=draw.mode==='pts'
-    ?(draw.pts.length<3?'גע בלוח כדי לסמן נקודות. אפשר לגרור לפני שמרימים את האצבע.':'לסגירת הצורה גע בנקודת ההתחלה (העיגול הגדול). „סיום" משאיר קו פתוח בנקודה האחרונה.')
-    :'צייר עם האצבע. אם תסיים ליד נקודת ההתחלה הצורה תיסגר. הקווים מתיישרים אוטומטית.';
+    ?(draw.pts.length<3?tt("גע בלוח כדי לסמן נקודות. אפשר לגרור לפני שמרימים את האצבע."):tt("לסגירת הצורה גע בנקודת ההתחלה (העיגול הגדול). „סיום\" משאיר קו פתוח בנקודה האחרונה."))
+    :tt("צייר עם האצבע. אם תסיים ליד נקודת ההתחלה הצורה תיסגר. הקווים מתיישרים אוטומטית.");
 }
 function startDraw(){ select(null); draw={mode:drawMode,pts:[],prev:null,stroke:null}; updDrawBar(); render(); }
 function endDraw(){ draw=null; updDrawBar(); $('#addGroup').hidden=false; render(); }
 function finishDraw(closed,P){
   P=P||draw.pts;
-  if(P.length<(closed?3:2)){toast(closed?'צורה סגורה צריכה לפחות 3 נקודות':'צריך לפחות 2 נקודות');return;}
+  if(P.length<(closed?3:2)){toast(closed?tt("צורה סגורה צריכה לפחות 3 נקודות"):tt("צריך לפחות 2 נקודות"));return;}
   const s=polyToShape(P,closed); sk.shapes.push(s); commit(); endDraw(); select(s.id);
-  toast('אפשר עכשיו לתקן את אורך כל צלע בחלונית');
+  toast(tt("אפשר עכשיו לתקן את אורך כל צלע בחלונית"));
 }
 function drawDown(p){
   if(draw.mode==='free'){draw.stroke=[toW(p)];}
@@ -990,7 +1058,7 @@ function drawUp(p){
     P=rdp(P,8/view.k); let closed=false;
     if(P.length>=4&&dist(P[0],P[P.length-1])*view.k<40){closed=true;P.pop();}
     if(magnet){const Q=straighten(P,closed); if(Q) P=Q;}
-    if(P.length<(closed?3:2)||(!closed&&dist(P[0],P[P.length-1])*view.k<10)){toast('הקו קצר מדי, נסה שוב');render();return;}
+    if(P.length<(closed?3:2)||(!closed&&dist(P[0],P[P.length-1])*view.k<10)){toast(tt("הקו קצר מדי, נסה שוב"));render();return;}
     finishDraw(closed,P); return;
   }
   const c=snapCand(toW(p)); draw.prev=null;
@@ -1008,9 +1076,15 @@ $('#dCancel').onclick=endDraw;
 
 /* ---------- adding ---------- */
 function showPicker(){
-  modal(`<h2>איזו צורה להוסיף?<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2><div class="picks">`+
+  modal(`<h2>${tt("איזו צורה להוסיף?")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2><div class="picks">`+
     Object.keys(KIND_LABEL).map(k=>`<button class="pick" data-kind="${k}"><svg viewBox="0 0 40 30">${PICK_ICON[k]}</svg>${KIND_LABEL[k]}</button>`).join('')+
-    `</div><div class="hint" style="margin-top:12px">הצורה תופיע במרכז הלוח. אחר כך מזינים מידות, גוררים למקום ומסובבים בידית העגולה.</div>`);
+    `</div><div class="hint" style="margin-top:12px">${tt("הצורה תופיע במרכז הלוח. אחר כך מזינים מידות, גוררים למקום ומסובבים בידית העגולה.")}</div>`);
+}
+function defParams(kind){
+  const p=clone(DEF[kind]); if(!IMP) return p;
+  Object.keys(p).forEach(k=>{if(k!=='n'&&typeof p[k]==='number') p[k]=niceDef(p[k]);});
+  if(p.segs) p.segs.forEach(g=>g.len=niceDef(g.len));
+  return p;
 }
 function addShape(kind){
   closeModal();
@@ -1018,7 +1092,7 @@ function addShape(kind){
   const sy=isMobile()?H*0.26:H/2;
   const wx=(W/2-view.ox)/view.k, wy=(sy-view.oy)/view.k;
   const n=sk.shapes.filter(s=>s.kind===kind).length+1;
-  const s={id:uid(),kind,name:kind==='line'?'':SHORT[kind]+' '+n,p:JSON.parse(JSON.stringify(DEF[kind])),
+  const s={id:uid(),kind,name:kind==='line'?'':SHORT[kind]+' '+n,p:defParams(kind),
     x:Math.round(wx*10)/10,y:Math.round(wy*10)/10,rot:0,color:PALETTE[sk.shapes.length%PALETTE.length]};
   sk.shapes.push(s); commit(); select(s.id);
   // make sure the new shape fits on screen
@@ -1101,7 +1175,7 @@ function zoomAt(p,f){const k=Math.max(3,Math.min(600,view.k*f)),wx=(p.x-view.ox)
 $('#zinBtn').onclick=()=>zoomAt({x:W/2,y:H/2},1.3);
 $('#zoutBtn').onclick=()=>zoomAt({x:W/2,y:H/2},1/1.3);
 $('#fitBtn').onclick=()=>{fit();render();};
-$('#magBtn').onclick=()=>{magnet=!magnet;$('#magBtn').classList.toggle('on',magnet);toast(magnet?'הצמדה פעילה: פינות מתיישרות, סיבוב בקפיצות של 15°':'הצמדה כבויה: תנועה וסיבוב חופשיים');};
+$('#magBtn').onclick=()=>{magnet=!magnet;$('#magBtn').classList.toggle('on',magnet);toast(magnet?tt("הצמדה פעילה: פינות מתיישרות, סיבוב בקפיצות של 15°"):tt("הצמדה כבויה: תנועה וסיבוב חופשיים"));};
 $('#addBtn').onclick=showPicker;
 $('#undoBtn').onclick=undo; $('#redoBtn').onclick=redo;
 document.addEventListener('keydown',e=>{
@@ -1143,52 +1217,53 @@ function rowsData(sx=sk){
 }
 $('#totalBtn').onclick=()=>{
   const rows=rowsData(),tot=rows.filter(r=>r.inc).reduce((t,r)=>t+r.area,0);
-  if(!rows.length){toast('אין עדיין צורות בשרטוט');return;}
-  modal(`<h2>סיכום שטחים<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2><div class="tbl"><table><thead><tr><th>שם</th><th>צורה</th><th class="n">שטח (מ״ר)</th><th class="n">היקף (מ׳)</th></tr></thead><tbody>`+
-    rows.map(r=>`<tr style="${r.inc?'':'color:var(--ink-2)'}"><td>${esc(r.name)}${r.inc?'':' <small>(לא נספר)</small>'}</td><td>${r.kind}</td><td class="n">${fmt(r.area)}</td><td class="n">${fmt(r.per)}</td></tr>`).join('')+
-    `</tbody><tfoot><tr><td colspan="2">סה״כ</td><td class="n">${fmt(tot)}</td><td></td></tr></tfoot></table></div>
-    <div class="btnrow"><button class="primary" id="copySum">${''}העתקת הסיכום כטקסט</button></div><div class="hint" id="copyFallback" hidden></div>`);
+  if(!rows.length){toast(tt("אין עדיין צורות בשרטוט"));return;}
+  modal(`<h2>${tt("סיכום שטחים")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2><div class="tbl"><table><thead><tr><th>${tt("שם")}</th><th>${tt("צורה")}</th><th class="n">${tt("שטח (")}${uA()})</th><th class="n">${tt("היקף (")}${uL()})</th></tr></thead><tbody>`+
+    rows.map(r=>`<tr style="${r.inc?'':'color:var(--ink-2)'}"><td>${esc(r.name)}${r.inc?'':tt(" <small>(לא נספר)</small>")}</td><td>${r.kind}</td><td class="n">${fA(r.area)}</td><td class="n">${fL(r.per)}</td></tr>`).join('')+
+    `</tbody><tfoot><tr><td colspan="2">${tt("סה״כ")}</td><td class="n">${fA(tot)}</td><td></td></tr></tfoot></table></div>
+    <div class="btnrow"><button class="primary" id="copySum">${''}${tt("העתקת הסיכום כטקסט")}</button></div><div class="hint" id="copyFallback" hidden></div>`);
   $('#copySum').onclick=()=>{
-    const txt=sk.name+'\n'+rows.map(r=>`${r.name}: ${fmt(r.area)} מ״ר, היקף ${fmt(r.per)} מ׳${r.inc?'':' (לא נספר)'}`).join('\n')+`\nסה״כ: ${fmt(tot)} מ״ר`;
+    const txt=sk.name+'\n'+rows.map(r=>`${r.name}: ${fAU(r.area)}, ${tt('היקף')} ${fLU(r.per)}${r.inc?'':' '+tt('(לא נספר)')}`).join('\n')+`\n${tt('סה״כ')}: ${fAU(tot)}`;
     const fb=()=>{const h=$('#copyFallback');h.hidden=false;h.innerHTML=`<textarea style="width:100%;height:140px;font:inherit" readonly>${esc(txt)}</textarea>`;h.querySelector('textarea').select();};
-    try{navigator.clipboard.writeText(txt).then(()=>toast('הסיכום הועתק'),fb);}catch(_){fb();}
+    try{navigator.clipboard.writeText(txt).then(()=>toast(tt("הסיכום הועתק")),fb);}catch(_){fb();}
   };
 };
 
 /* ---------- sketches list ---------- */
 async function showList(){
-  modal(`<h2>הסקיצות שלי<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>${listTabs('sk')}<div class="hint">טוען…</div>`);
+  modal(`<h2>${tt("הסקיצות שלי")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>${listTabs('sk')}<div class="hint">${tt("טוען…")}</div>`);
   const all=await store.list(),list=all.filter(x=>!isProj(x));
   if(sk.example&&!list.find(x=>x.id===sk.id)) list.unshift(sk);
   const area=s=>s.shapes.filter(x=>!isOpen(x)&&x.include!==false).reduce((t,x)=>t+measures(x,geom(x)).area,0);
-  modal(`<h2>הסקיצות שלי<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>${listTabs('sk')}
-   <div class="sklist">`+list.map(s=>`<div class="sk${s.id===sk.id?' cur':''}"><div class="meta"><b>${esc(s.name||'ללא שם')}</b><small>${dateStr(s.updated||Date.now())} · ${s.shapes.length} צורות · ${fmt(area(s))} מ״ר</small></div>
-     ${s.id===sk.id?'<small style="color:var(--accent)">פתוחה</small>':`<button class="chip" data-open="${s.id}">פתיחה</button>`}
-     <button class="chip danger" data-delsk="${s.id}" aria-label="מחיקת סקיצה">${ic('trash')}</button></div>`).join('')+`</div>
-   ${folder.supported()?`<div class="fold"><b>שמירה אוטומטית לתיקייה</b>${folder.path?`<span dir="ltr" class="fpath">${esc(folder.path)}</span><div class="btnrow" style="margin-top:6px"><button class="chip" id="fdPick">החלפת תיקייה</button><button class="chip" id="fdStop">הפסקה</button></div>`:`<span>כל סקיצה תישמר גם כקובץ בתיקייה שתבחר, ותתעדכן בכל שינוי. בחר תיקייה של Google Drive, OneDrive או Dropbox כדי לקבל גיבוי בענן.</span><div class="btnrow" style="margin-top:6px"><button class="primary" id="fdPick">בחירת תיקייה</button></div>`}</div>`:''}
-   <div class="btnrow"><button class="primary" id="newSk">סקיצה חדשה</button><button class="chip" id="bkOut">${ic('dl')} גיבוי לקובץ</button><button class="chip" id="bkIn">ייבוא מקובץ</button><button class="chip" id="dlApp">${ic('monitor')} ${IS_TAURI?'עדכונים':'אפליקציה למחשב'}</button><input type="file" id="bkFile" accept=".json,application/json" hidden></div>
-   <div class="hint">${store.mode==='claude'?'הסקיצות נשמרות בחשבון שלך וזמינות מכל מכשיר.':store.mode==='firebase'?'הסקיצות נשמרות בחשבון Google שלך ומסתנכרנות בין המכשירים.':(IS_TAURI?'הסקיצות נשמרות במחשב הזה.':'הסקיצות נשמרות בדפדפן הזה בלבד.')+(cloud.configured()&&!cloud.user?' התחבר לחשבון Google כדי לשמור אותן גם בענן.':' קובץ גיבוי מאפשר להעביר אותן למכשיר אחר.')}</div>`);
+  modal(`<h2>${tt("הסקיצות שלי")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>${listTabs('sk')}
+   <div class="sklist">`+list.map(s=>`<div class="sk${s.id===sk.id?' cur':''}"><div class="meta"><b>${esc(s.name||tt("ללא שם"))}</b><small>${dateStr(s.updated||Date.now())} · ${s.shapes.length} ${tt("צורות ·")} ${fAU(area(s))}</small></div>
+     ${s.id===sk.id?tt("<small style=\"color:var(--accent)\">פתוחה</small>"):`<button class="chip" data-open="${s.id}">${tt("פתיחה")}</button>`}
+     <button class="chip danger" data-delsk="${s.id}" aria-label="${esc(tt("מחיקת סקיצה"))}">${ic('trash')}</button></div>`).join('')+`</div>
+   ${folder.supported()?`<div class="fold"><b>${tt("שמירה אוטומטית לתיקייה")}</b>${folder.path?`<span dir="ltr" class="fpath">${esc(folder.path)}</span><div class="btnrow" style="margin-top:6px"><button class="chip" id="fdPick">${tt("החלפת תיקייה")}</button><button class="chip" id="fdStop">${tt("הפסקה")}</button></div>`:`<span>${tt("כל סקיצה תישמר גם כקובץ בתיקייה שתבחר, ותתעדכן בכל שינוי. בחר תיקייה של Google Drive, OneDrive או Dropbox כדי לקבל גיבוי בענן.")}</span><div class="btnrow" style="margin-top:6px"><button class="primary" id="fdPick">${tt("בחירת תיקייה")}</button></div>`}</div>`:''}
+   <div class="btnrow"><button class="primary" id="newSk">${tt("סקיצה חדשה")}</button><button class="chip" id="bkOut">${ic('dl')} ${tt("גיבוי לקובץ")}</button><button class="chip" id="bkIn">${tt("ייבוא מקובץ")}</button><button class="chip" id="setBtn">${ic('gear')} ${tt("הגדרות")}</button><button class="chip" id="dlApp">${ic('monitor')} ${IS_TAURI?tt("עדכונים"):tt("אפליקציה למחשב")}</button><input type="file" id="bkFile" accept=".json,application/json" hidden></div>
+   <div class="hint">${store.mode==='claude'?tt("הסקיצות נשמרות בחשבון שלך וזמינות מכל מכשיר."):store.mode==='firebase'?tt("הסקיצות נשמרות בחשבון Google שלך ומסתנכרנות בין המכשירים."):(IS_TAURI?tt("הסקיצות נשמרות במחשב הזה."):tt("הסקיצות נשמרות בדפדפן הזה בלבד."))+(cloud.configured()&&!cloud.user?tt(" התחבר לחשבון Google כדי לשמור אותן גם בענן."):tt(" קובץ גיבוי מאפשר להעביר אותן למכשיר אחר."))}</div>`);
   if($('#fdPick')) $('#fdPick').onclick=async()=>{ if(await folder.choose()){ setStatus(savedText()); showList(); } };
   if($('#fdStop')) $('#fdStop').onclick=()=>{ folder.stop(); setStatus(savedText()); showList(); };
   $('#bkOut').onclick=()=>backupOut(all.filter(x=>!x.example));
   $('#bkIn').onclick=()=>$('#bkFile').click();
   $('#dlApp').onclick=showDownloads;
+  $('#setBtn').onclick=showSettings;
   $('#bkFile').onchange=e=>{const f=e.target.files&&e.target.files[0]; if(f) backupIn(f);};
   $('#newSk').onclick=async()=>{ await closeDoc(); docReturn=null; $('#backDoc').hidden=true; openSketch(newSketch()); closeModal(); scheduleSave(); };
   modalEl.querySelectorAll('[data-open]').forEach(b=>b.onclick=async()=>{const s=list.find(x=>x.id===b.dataset.open); await closeDoc(); docReturn=null; $('#backDoc').hidden=true; openSketch(JSON.parse(JSON.stringify(s))); closeModal();});
   modalEl.querySelectorAll('[data-delsk]').forEach(b=>b.onclick=async()=>{
-    if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='למחוק?';return;}
-    const id=b.dataset.delsk; try{await store.remove(id);}catch(_){toast('המחיקה נכשלה');return;}
+    if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent=tt("למחוק?");return;}
+    const id=b.dataset.delsk; try{await store.remove(id);}catch(_){toast(tt("המחיקה נכשלה"));return;}
     if(id===sk.id){ const rest=(await store.list()).filter(x=>x.id!==id&&!isProj(x)); openSketch(rest[0]?JSON.parse(JSON.stringify(rest[0])):newSketch()); }
     showList();
   });
 }
 $('#listBtn').onclick=showList;
-$('#listBtn').title='הסקיצות והמסמכים שלי';$('#listBtn').setAttribute('aria-label','הסקיצות והמסמכים שלי');
+$('#listBtn').title=tt("הסקיצות והמסמכים שלי");$('#listBtn').setAttribute('aria-label',tt("הסקיצות והמסמכים שלי"));
 function openSketch(s){
   sk=s; sk.shapes.forEach(x=>{if(!x.id)x.id=uid();});
   sel=null; $('#skname').value=sk.name||''; sheet.hidden=true; mainEl.classList.remove('has-panel'); if(draw){draw=null;updDrawBar();} $('#addGroup').hidden=false;
-  resetHist(); setStatus(sk.example?'דוגמה: תישמר אוטומטית אחרי השינוי הראשון':savedText());
+  resetHist(); setStatus(sk.example?tt("דוגמה: תישמר אוטומטית אחרי השינוי הראשון"):savedText());
   requestAnimationFrame(()=>{fit();render();});
 }
 
@@ -1205,24 +1280,24 @@ function exportSVG(sx=sk,o={}){
   const tH=tb&&rows.length?90+(rows.length+1)*42:0, Hd=Math.round(head+dh+tH+(ft?60:10));
   const T={k,ox:pad+((Wd-2*pad)-bw*k)/2-x0*k,oy:head+pad-y0*k};
   let b='',l='';sx.shapes.forEach(s=>{const o=shapeSVG(s,T,{fs:efs,exp:true});b+=o.body;l+=o.lab;});
-  const R=Wd-pad;
+  const R=Wd-pad,MX=v=>RTL?v:Wd-v;
   let g=`<svg xmlns="http://www.w3.org/2000/svg" width="${Wd}" height="${Hd}" viewBox="0 0 ${Wd} ${Hd}"><style>
   text{font-family:Rubik,Arial,"Noto Sans Hebrew",sans-serif}
   .el{fill:#1c232d;stroke:#fff;paint-order:stroke;font-weight:500}.cn{fill:#1c232d;stroke:#fff;paint-order:stroke;font-weight:700}
   .ca{fill:#b44612;stroke:#fff;paint-order:stroke;font-weight:700}.cp{fill:#5d6774;stroke:#fff;paint-order:stroke}
   .h1{font-size:40px;font-weight:700;fill:#1c232d}.h2{font-size:20px;fill:#5d6774}.th{font-size:19px;fill:#5d6774}.td{font-size:21px;fill:#1c232d}.tb{font-size:22px;font-weight:700;fill:#1c232d}
   </style><rect width="100%" height="100%" fill="#ffffff"/>
-`+(hd?`<text class="h1" x="${R}" y="62" direction="rtl" text-anchor="start">${esc(sx.name||'סקיצה')}</text>
-  <text class="h2" x="${R}" y="100" direction="rtl" text-anchor="start">${dateStr(Date.now())} · מידות במטרים · סה״כ שטח ${fmt(tot)} מ״ר</text>
+`+(hd?`<text class="h1" x="${MX(R)}" y="62" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${esc(sx.name||tt("סקיצה"))}</text>
+  <text class="h2" x="${MX(R)}" y="100" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${dateStr(Date.now())} · ${IMP?tt("מידות ברגל ואינץ׳"):tt("מידות במטרים")} ${tt("· סה״כ שטח")} ${fAU(tot)}</text>
   <line x1="${pad}" y1="${head-8}" x2="${R}" y2="${head-8}" stroke="#d8dcd3" stroke-width="2"/>`:'')+b+l;
   if(tb&&rows.length){
     let y=head+dh+40; const cols=[R,R-460,R-760,R-1010];
     g+=`<line x1="${pad}" y1="${y-30}" x2="${R}" y2="${y-30}" stroke="#d8dcd3" stroke-width="2"/>`;
-    ['שם','צורה','שטח (מ״ר)','היקף (מ׳)'].forEach((t,i)=>g+=`<text class="th" x="${cols[i]}" y="${y}" direction="rtl" text-anchor="start">${t}</text>`);
-    rows.forEach(r=>{y+=42;g+=`<text class="td" x="${cols[0]}" y="${y}" direction="rtl" text-anchor="start"${r.inc?'':' fill-opacity=".55"'}>${esc(r.name)}${r.inc?'':' (לא נספר)'}</text><text class="td" x="${cols[1]}" y="${y}" direction="rtl" text-anchor="start">${r.kind}</text><text class="td" x="${cols[2]}" y="${y}" direction="rtl" text-anchor="start">${fmt(r.area)}</text><text class="td" x="${cols[3]}" y="${y}" direction="rtl" text-anchor="start">${fmt(r.per)}</text>`;});
-    y+=46; g+=`<line x1="${pad}" y1="${y-32}" x2="${R}" y2="${y-32}" stroke="#1c232d" stroke-width="1.5"/><text class="tb" x="${cols[0]}" y="${y}" direction="rtl" text-anchor="start">סה״כ</text><text class="tb" x="${cols[2]}" y="${y}" direction="rtl" text-anchor="start">${fmt(tot)}</text>`;
+    [tt("שם"),tt("צורה"),tt("שטח (")+uA()+')',tt("היקף (")+(IMP?'ft':tt("מ׳"))+')'].forEach((t,i)=>g+=`<text class="th" x="${MX(cols[i])}" y="${y}" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${t}</text>`);
+    rows.forEach(r=>{y+=42;g+=`<text class="td" x="${MX(cols[0])}" y="${y}" direction="${RTL?'rtl':'ltr'}" text-anchor="start"${r.inc?'':' fill-opacity=".55"'}>${esc(r.name)}${r.inc?'':tt(" (לא נספר)")}</text><text class="td" x="${MX(cols[1])}" y="${y}" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${r.kind}</text><text class="td" x="${MX(cols[2])}" y="${y}" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${fA(r.area)}</text><text class="td" x="${MX(cols[3])}" y="${y}" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${fL(r.per)}</text>`;});
+    y+=46; g+=`<line x1="${pad}" y1="${y-32}" x2="${R}" y2="${y-32}" stroke="#1c232d" stroke-width="1.5"/><text class="tb" x="${MX(cols[0])}" y="${y}" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${tt("סה״כ")}</text><text class="tb" x="${MX(cols[2])}" y="${y}" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${fA(tot)}</text>`;
   }
-  if(ft) g+=`<text class="h2" x="${R}" y="${Hd-24}" direction="rtl" text-anchor="start" font-size="16">סקיצה להערכה בלבד, אינה מדידה מדויקת</text>`;
+  if(ft) g+=`<text class="h2" x="${MX(R)}" y="${Hd-24}" direction="${RTL?'rtl':'ltr'}" text-anchor="start" font-size="16">${tt("סקיצה להערכה בלבד, אינה מדידה מדויקת")}</text>`;
   g+='</svg>';
   return {svg:g,w:Wd,h:Hd};
 }
@@ -1247,17 +1322,17 @@ async function saveFile(name,data,ext,label){
   return 'saved';
 }
 async function backupOut(list){
-  if(!list.length){toast('אין סקיצות לגיבוי');return;}
+  if(!list.length){toast(tt("אין סקיצות לגיבוי"));return;}
   const d=new Date(),ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   const json=JSON.stringify({app:'sirtuti',format:1,exported:d.toISOString(),sketches:list.map(s=>({id:s.id,...plain(s)}))},null,1);
-  try{ const r=await saveFile('sirtuti-backup-'+ds+'.json',json,'json','גיבוי שרטוטי');
-    if(r==='saved') toast('נשמר גיבוי של '+list.length+' סקיצות'); else if(r==='fallback') toast('שמירת קבצים לא זמינה כאן'); }
-  catch(e){ toast('שמירת הגיבוי נכשלה'); }
+  try{ const r=await saveFile('sirtuti-backup-'+ds+'.json',json,'json',tt("גיבוי שרטוטי"));
+    if(r==='saved') toast(tt("נשמר גיבוי של ")+list.length+tt(" סקיצות")); else if(r==='fallback') toast(tt("שמירת קבצים לא זמינה כאן")); }
+  catch(e){ toast(tt("שמירת הגיבוי נכשלה")); }
 }
 async function backupIn(file){
-  let data; try{ data=JSON.parse(await file.text()); }catch(e){ toast('הקובץ לא נקרא: זה לא קובץ גיבוי של שרטוטי'); return; }
+  let data; try{ data=JSON.parse(await file.text()); }catch(e){ toast(tt("הקובץ לא נקרא: זה לא קובץ גיבוי של שרטוטי")); return; }
   const arr=Array.isArray(data&&data.sketches)?data.sketches:null;
-  if(!arr){ toast('הקובץ לא נקרא: זה לא קובץ גיבוי של שרטוטי'); return; }
+  if(!arr){ toast(tt("הקובץ לא נקרא: זה לא קובץ גיבוי של שרטוטי")); return; }
   const have=local.all(); let n=0;
   for(const s of arr){
     if(!s||!Array.isArray(s.shapes)) continue;
@@ -1265,24 +1340,27 @@ async function backupIn(file){
     if(cur&&(cur.updated||0)>=(s.updated||0)) continue;
     await store.save({id,...plain(s)}); n++;
   }
-  toast(n?('יובאו '+n+' סקיצות'):'כל הסקיצות בקובץ כבר קיימות'); showList();
+  toast(n?(tt("יובאו ")+n+tt(" סקיצות")):tt("כל הסקיצות בקובץ כבר קיימות")); showList();
 }
-$('#expBtn').onclick=async()=>{
-  const ex=exportSVG(); if(!ex){toast('אין צורות לשמירה');return;}
-  toast('מכין תמונה…');
+$('#expBtn').onclick=()=>exportMenu([
+  {icon:'image',label:tt('תמונה (PNG)'),desc:tt('לשליחה בוואטסאפ או להדבקה במסמך'),run:exportPng},
+  {icon:'file',label:'PDF',desc:tt('דף A4 עם השרטוט וטבלת השטחים'),run:async()=>{toast(tt('מכין PDF…'));savePdf(await sketchPdf(sk),safeName(sk.name,tt('סקיצה')));}}]);
+async function exportPng(){
+  const ex=exportSVG(); if(!ex){toast(tt("אין צורות לשמירה"));return;}
+  toast(tt("מכין תמונה…"));
   try{
     const img=new Image(); img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ex.svg);
     await img.decode();
     const c=document.createElement('canvas'); c.width=ex.w*2; c.height=ex.h*2;
     const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,c.width,c.height);
     const blob=await new Promise(r=>c.toBlob(r,'image/png'));
-    const fname=((sk.name||'סקיצה').replace(/[\\/:*?"<>|]+/g,' ').trim()||'סקיצה')+'.png';
-    const r=await saveFile(fname,blob,'png','תמונה');
-    if(r==='saved'){ toast('התמונה נשמרה'); return; }
+    const fname=((sk.name||tt("סקיצה")).replace(/[\\/:*?"<>|]+/g,' ').trim()||tt("סקיצה"))+'.png';
+    const r=await saveFile(fname,blob,'png',tt("תמונה"));
+    if(r==='saved'){ toast(tt("התמונה נשמרה")); return; }
     if(r==='cancel'){ $('#toast').hidden=true; return; }
     const url=URL.createObjectURL(blob);
-    modal(`<h2>הסקיצה כתמונה<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2><img class="expimg" src="${url}" alt="סקיצה"><div class="hint">בטלפון: לחיצה ארוכה על התמונה ← שמירה או שיתוף. במחשב: קליק ימני ← שמירת תמונה.</div>`);
-  }catch(e){ toast('יצירת התמונה נכשלה'); }
+    modal(`<h2>${tt("הסקיצה כתמונה")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2><img class="expimg" src="${url}" alt="${esc(tt("סקיצה"))}"><div class="hint">${tt("בטלפון: לחיצה ארוכה על התמונה ← שמירה או שיתוף. במחשב: קליק ימני ← שמירת תמונה.")}</div>`);
+  }catch(e){ toast(tt("יצירת התמונה נכשלה")); }
 };
 
 /* ---------- project documents ---------- */
@@ -1294,37 +1372,37 @@ const VIEW_K='sirtuti.view';
 const setView=v=>{try{v?localStorage.setItem(VIEW_K,v):localStorage.removeItem(VIEW_K)}catch(e){}};
 const getView=()=>{try{return localStorage.getItem(VIEW_K)||''}catch(e){return ''}};
 const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
-const fmtDate=iso=>{if(!iso)return '';const [y,m,d]=iso.split('-');return d&&m&&y?`${+d}.${+m}.${y}`:iso;};
+const fmtDate=iso=>{if(!iso)return '';const [y,m,d]=iso.split('-');return d&&m&&y?new Date(+y,+m-1,+d).toLocaleDateString(LOCALE,{day:'numeric',month:'numeric',year:'numeric'}):iso;};
 function newProject(){
-  return {id:'p'+uid(),kind:'project',name:'פרויקט חדש',meta:{client:'',address:'',date:todayISO()},
-    blocks:[{t:'h',v:'סיכום ביקור'},{t:'p',v:''}],shapes:[],updated:Date.now()};
+  return {id:'p'+uid(),kind:'project',name:tt("פרויקט חדש"),meta:{client:'',address:'',date:todayISO()},
+    blocks:[{t:'h',v:tt("סיכום ביקור")},{t:'p',v:''}],shapes:[],updated:Date.now()};
 }
 const skById=id=>{const s=local.all()[id];return s&&!isProj(s)?s:(sk&&sk.id===id?sk:null);};
 const skArea=s=>rowsData(s).filter(r=>r.inc).reduce((t,r)=>t+r.area,0);
 function docSketchIds(){const seen=new Set(),out=[];(doc.blocks||[]).forEach(b=>{if(b.t==='sk'&&b.id&&!seen.has(b.id)){seen.add(b.id);out.push(b.id);}});return out;}
 function areasData(){
   const groups=docSketchIds().map(id=>{const s=skById(id);if(!s)return null;const rows=rowsData(s).filter(r=>r.inc);
-    return {name:s.name||'סקיצה',rows,total:rows.reduce((t,r)=>t+r.area,0)};}).filter(Boolean);
+    return {name:s.name||tt("סקיצה"),rows,total:rows.reduce((t,r)=>t+r.area,0)};}).filter(Boolean);
   return {groups,total:groups.reduce((t,g)=>t+g.total,0)};
 }
 function previewSrc(s){const ex=exportSVG(s,{header:false,table:false,foot:false,fs:28});return ex?'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ex.svg):'';}
 
 function blockHTML(b,i){
-  const ctl=`<div class="bctl"><button data-mv="-1" aria-label="למעלה">${ic('up')}</button><button data-mv="1" aria-label="למטה">${ic('down')}</button><button data-rm aria-label="מחיקה">${ic('x')}</button></div>`;
+  const ctl=`<div class="bctl"><button data-mv="-1" aria-label="${esc(tt("למעלה"))}">${ic('up')}</button><button data-mv="1" aria-label="${esc(tt("למטה"))}">${ic('down')}</button><button data-rm aria-label="${esc(tt("מחיקה"))}">${ic('x')}</button></div>`;
   let c='';
   switch(b.t){
-    case 'h': c=`<input class="bh" id="b${i}" data-f="v" value="${esc(b.v)}" placeholder="כותרת">`; break;
-    case 'p': c=`<textarea class="bp" id="b${i}" data-f="v" rows="1" placeholder="כתוב כאן… (שורה שמתחילה ב- „-" תהיה רשימה)">${esc(b.v)}</textarea>`; break;
-    case 'todo': c=`<div class="btodo"><input type="checkbox" id="c${i}" data-f="done" ${b.done?'checked':''} aria-label="בוצע"><input class="bt${b.done?' done':''}" id="b${i}" data-f="v" value="${esc(b.v)}" placeholder="משימה"></div>`; break;
+    case 'h': c=`<input class="bh" id="b${i}" data-f="v" value="${esc(b.v)}" placeholder="${esc(tt("כותרת"))}">`; break;
+    case 'p': c=`<textarea class="bp" id="b${i}" data-f="v" rows="1" placeholder="${esc(tt("כתוב כאן… (שורה שמתחילה ב-״-״ תהיה רשימה)"))}">${esc(b.v)}</textarea>`; break;
+    case 'todo': c=`<div class="btodo"><input type="checkbox" id="c${i}" data-f="done" ${b.done?'checked':''} aria-label="${esc(tt("בוצע"))}"><input class="bt${b.done?' done':''}" id="b${i}" data-f="v" value="${esc(b.v)}" placeholder="${esc(tt("משימה"))}"></div>`; break;
     case 'sk': { const s=skById(b.id);
-      c=s?`<button class="bsk" data-edit="${esc(b.id)}"><img alt="${esc(s.name)}" src="${previewSrc(s)}"><span class="cap"><b>${esc(s.name||'סקיצה')}</b><span>${fmt(skArea(s))} מ״ר</span><span class="ed">${ic('pen')} עריכת הסקיצה</span></span></button>`
-        :`<div class="bmiss">הסקיצה נמחקה</div>`; break; }
+      c=s?`<button class="bsk" data-edit="${esc(b.id)}"><img alt="${esc(s.name)}" src="${previewSrc(s)}"><span class="cap"><b>${esc(s.name||tt("סקיצה"))}</b><span>${fAU(skArea(s))}</span><span class="ed">${ic('pen')} ${tt("עריכת הסקיצה")}</span></span></button>`
+        :`<div class="bmiss">${tt("הסקיצה נמחקה")}</div>`; break; }
     case 'areas': { const a=areasData();
-      c=`<div class="bareas"><div class="bat">סיכום שטחים</div>`+(a.groups.length?`<div class="tbl"><table><thead><tr><th>פריט</th><th class="n">שטח (מ״ר)</th></tr></thead><tbody>`+
-        a.groups.map(g=>`<tr class="grp"><td colspan="2">${esc(g.name)}</td></tr>`+g.rows.map(r=>`<tr><td>${esc(r.name)}</td><td class="n">${fmt(r.area)}</td></tr>`).join('')+
-          (a.groups.length>1?`<tr class="sub"><td>סה״כ</td><td class="n">${fmt(g.total)}</td></tr>`:'')).join('')+
-        `</tbody><tfoot><tr><td>סה״כ${a.groups.length>1?' בפרויקט':''}</td><td class="n">${fmt(a.total)}</td></tr></tfoot></table></div>`
-        :`<div class="hint">הטבלה תתמלא אוטומטית מהסקיצות שבמסמך.</div>`)+`</div>`; break; }
+      c=`<div class="bareas"><div class="bat">${tt("סיכום שטחים")}</div>`+(a.groups.length?`<div class="tbl"><table><thead><tr><th>${tt("פריט")}</th><th class="n">${tt("שטח (")}${uA()})</th></tr></thead><tbody>`+
+        a.groups.map(g=>`<tr class="grp"><td colspan="2">${esc(g.name)}</td></tr>`+g.rows.map(r=>`<tr><td>${esc(r.name)}</td><td class="n">${fA(r.area)}</td></tr>`).join('')+
+          (a.groups.length>1?`<tr class="sub"><td>${tt("סה״כ")}</td><td class="n">${fA(g.total)}</td></tr>`:'')).join('')+
+        `</tbody><tfoot><tr><td>${tt("סה״כ")}${a.groups.length>1?tt(" בפרויקט"):''}</td><td class="n">${fA(a.total)}</td></tr></tfoot></table></div>`
+        :`<div class="hint">${tt("הטבלה תתמלא אוטומטית מהסקיצות שבמסמך.")}</div>`)+`</div>`; break; }
   }
   return `<div class="blk blk-${b.t}" data-i="${i}">${c}${ctl}</div>`;
 }
@@ -1332,24 +1410,24 @@ function renderDoc(focusI){
   const m=doc.meta||(doc.meta={});
   $('#docTitle').value=doc.name||'';
   dpage.innerHTML=`<div class="dmeta">
-      <label><span>לקוח</span><input id="dm-client" data-m="client" value="${esc(m.client)}" placeholder="שם הלקוח"></label>
-      <label><span>כתובת</span><input id="dm-address" data-m="address" value="${esc(m.address)}" placeholder="כתובת"></label>
-      <label><span>תאריך</span><input id="dm-date" data-m="date" type="date" value="${esc(m.date)}"></label>
+      <label><span>${tt("לקוח")}</span><input id="dm-client" data-m="client" value="${esc(m.client)}" placeholder="${esc(tt("שם הלקוח"))}"></label>
+      <label><span>${tt("כתובת")}</span><input id="dm-address" data-m="address" value="${esc(m.address)}" placeholder="${esc(tt("כתובת"))}"></label>
+      <label><span>${tt("תאריך")}</span><input id="dm-date" data-m="date" type="date" value="${esc(m.date)}"></label>
     </div><div class="blocks">${doc.blocks.map(blockHTML).join('')}</div>
-    <div class="addbar"><span>הוספה:</span>
-      <button class="chip" data-add="h">כותרת</button><button class="chip" data-add="p">טקסט</button>
-      <button class="chip" data-add="todo">משימה</button><button class="chip accent" data-add="sk">${ic('pen')} סקיצה</button>
-      <button class="chip" data-add="areas">סיכום שטחים</button></div>`;
+    <div class="addbar"><span>${tt("הוספה:")}</span>
+      <button class="chip" data-add="h">${tt("כותרת")}</button><button class="chip" data-add="p">${tt("טקסט")}</button>
+      <button class="chip" data-add="todo">${tt("משימה")}</button><button class="chip accent" data-add="sk">${ic('pen')} ${tt("סקיצה")}</button>
+      <button class="chip" data-add="areas">${tt("סיכום שטחים")}</button></div>`;
   dpage.querySelectorAll('textarea.bp').forEach(autoGrow);
   if(focusI!=null){const f=$('#b'+focusI);if(f){f.focus();try{const L=f.value.length;f.setSelectionRange(L,L);}catch(e){}}}
 }
 function autoGrow(t){t.style.height='auto';t.style.height=(t.scrollHeight+2)+'px';}
 function docStatus(t){$('#docStatus').textContent=t;}
-function scheduleDocSave(){ docStatus('שומר…'); clearTimeout(docSaveT); docSaveT=setTimeout(saveDocNow,600); }
+function scheduleDocSave(){ docStatus(tt("שומר…")); clearTimeout(docSaveT); docSaveT=setTimeout(saveDocNow,600); }
 async function saveDocNow(){
   if(!doc) return; clearTimeout(docSaveT); docSaveT=null;
   doc.updated=Date.now();
-  try{ await store.save(doc); docStatus(savedText()); }catch(e){ docStatus('השמירה נכשלה'); }
+  try{ await store.save(doc); docStatus(savedText()); }catch(e){ docStatus(tt("השמירה נכשלה")); }
 }
 function insertBlock(b,after){
   const i=(after!=null&&after>=0&&after<doc.blocks.length)?after+1:doc.blocks.length;
@@ -1362,11 +1440,11 @@ function openDoc(p){
 async function closeDoc(){ if(!doc) return; if(docSaveT) await saveDocNow(); docv.hidden=true; doc=null; setView(''); }
 async function flushSketch(){ if(saveT){clearTimeout(saveT);saveT=null;await doSave();} else if(saving){await new Promise(r=>setTimeout(r,300));} }
 async function editSketchFromDoc(id){
-  const s=skById(id); if(!s){toast('הסקיצה לא נמצאה');return;}
+  const s=skById(id); if(!s){toast(tt("הסקיצה לא נמצאה"));return;}
   if(docSaveT) await saveDocNow();
-  docReturn=doc.id; const title=doc.name||'המסמך';
+  docReturn=doc.id; const title=doc.name||tt("המסמך");
   docv.hidden=true; setView(''); openSketch(clone(s));
-  $('#backDoc').innerHTML=`${ic('up')}<span>חזרה למסמך: ${esc(title)}</span>`; $('#backDoc').hidden=false;
+  $('#backDoc').innerHTML=`${ic('up')}<span>${tt("חזרה למסמך:")} ${esc(title)}</span>`; $('#backDoc').hidden=false;
 }
 $('#backDoc').onclick=async()=>{
   await flushSketch(); const p=local.all()[docReturn]; $('#backDoc').hidden=true;
@@ -1374,11 +1452,11 @@ $('#backDoc').onclick=async()=>{
 };
 function pickSketchForDoc(after){
   const list=Object.values(local.all()).filter(s=>!isProj(s)&&!s.example).sort((a,b)=>(b.updated||0)-(a.updated||0));
-  modal(`<h2>הוספת סקיצה למסמך<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>
-    <div class="btnrow" style="margin:0 0 12px"><button class="primary" id="skNewForDoc">${ic('plus')} סקיצה חדשה</button></div>
-    ${list.length?`<div class="hint" style="margin-bottom:6px">או בחר סקיצה קיימת:</div><div class="sklist">`+list.map(s=>`<div class="sk"><div class="meta"><b>${esc(s.name||'ללא שם')}</b><small>${dateStr(s.updated||Date.now())} · ${fmt(skArea(s))} מ״ר</small></div><button class="chip" data-pick="${esc(s.id)}">הוספה</button></div>`).join('')+`</div>`:''}`);
+  modal(`<h2>${tt("הוספת סקיצה למסמך")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>
+    <div class="btnrow" style="margin:0 0 12px"><button class="primary" id="skNewForDoc">${ic('plus')} ${tt("סקיצה חדשה")}</button></div>
+    ${list.length?`<div class="hint" style="margin-bottom:6px">${tt("או בחר סקיצה קיימת:")}</div><div class="sklist">`+list.map(s=>`<div class="sk"><div class="meta"><b>${esc(s.name||tt("ללא שם"))}</b><small>${dateStr(s.updated||Date.now())} · ${fAU(skArea(s))}</small></div><button class="chip" data-pick="${esc(s.id)}">${tt("הוספה")}</button></div>`).join('')+`</div>`:''}`);
   $('#skNewForDoc').onclick=async()=>{
-    const n=docSketchIds().length+1,s=newSketch(); s.name=(doc.name||'פרויקט')+' – סקיצה '+n; s.updated=Date.now();
+    const n=docSketchIds().length+1,s=newSketch(); s.name=(doc.name||tt("פרויקט"))+tt(" – סקיצה ")+n; s.updated=Date.now();
     await store.save(s); insertBlock({t:'sk',id:s.id},after); closeModal(); editSketchFromDoc(s.id);
   };
   modalEl.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{insertBlock({t:'sk',id:b.dataset.pick},after);closeModal();});
@@ -1410,36 +1488,38 @@ dpage.addEventListener('click',e=>{
   if(b.dataset.mv){ const j=i+(+b.dataset.mv); if(j<0||j>=doc.blocks.length) return;
     const [x]=doc.blocks.splice(i,1); doc.blocks.splice(j,0,x); curBlk=j; scheduleDocSave(); renderDoc(); return; }
   if(b.dataset.rm!=null){
-    if(!b.classList.contains('armed')){ b.classList.add('armed'); b.innerHTML='למחוק?'; return; }
+    if(!b.classList.contains('armed')){ b.classList.add('armed'); b.innerHTML=tt("למחוק?"); return; }
     doc.blocks.splice(i,1); curBlk=Math.min(i,doc.blocks.length-1); scheduleDocSave(); renderDoc();
   }
 });
 $('#docTitle').addEventListener('input',e=>{doc.name=e.target.value;scheduleDocSave();});
 $('#docBack').onclick=async()=>{ await closeDoc(); render(); };
 $('#docList').onclick=()=>showProjects();
-$('#docWord').onclick=()=>exportWord();
+$('#docWord').onclick=()=>exportMenu([
+  {icon:'file',label:'Word (.docx)',desc:tt('לעריכה נוספת ושליחה ללקוח'),run:exportWord},
+  {icon:'file',label:'PDF',desc:tt('מסמך מוכן לשליחה והדפסה'),run:async()=>{if(!doc)return;await saveDocNow();toast(tt('מכין PDF…'));savePdf(await docPdf(),safeName(doc.name,tt('פרויקט')));}}]);
 
 // projects list (second tab of "My sketches")
 function listTabs(active){
-  return `<div class="tabs"><button class="${active==='sk'?'on':''}" data-tab="sk">סקיצות</button><button class="${active==='pj'?'on':''}" data-tab="pj">מסמכי פרויקט</button></div>`;
+  return `<div class="tabs"><button class="${active==='sk'?'on':''}" data-tab="sk">${tt("סקיצות")}</button><button class="${active==='pj'?'on':''}" data-tab="pj">${tt("מסמכי פרויקט")}</button></div>`;
 }
 modalEl.addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(!t)return; t.dataset.tab==='pj'?showProjects():showList();});
 async function showProjects(){
-  modal(`<h2>הסקיצות שלי<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>${listTabs('pj')}<div class="hint">טוען…</div>`);
+  modal(`<h2>${tt("הסקיצות שלי")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>${listTabs('pj')}<div class="hint">${tt("טוען…")}</div>`);
   const list=(await store.list()).filter(isProj);
-  modal(`<h2>הסקיצות שלי<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>${listTabs('pj')}
+  modal(`<h2>${tt("הסקיצות שלי")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>${listTabs('pj')}
     ${list.length?`<div class="sklist">`+list.map(p=>{const m=p.meta||{},n=(p.blocks||[]).filter(b=>b.t==='sk').length;
-      return `<div class="sk${doc&&doc.id===p.id?' cur':''}"><div class="meta"><b>${esc(p.name||'ללא שם')}</b><small>${[m.client,fmtDate(m.date)].filter(Boolean).map(esc).join(' · ')}${n?` · ${n} סקיצות`:''}</small></div>
-      ${doc&&doc.id===p.id?'<small style="color:var(--accent)">פתוח</small>':`<button class="chip" data-openp="${esc(p.id)}">פתיחה</button>`}
-      <button class="chip danger" data-delp="${esc(p.id)}" aria-label="מחיקת מסמך">${ic('trash')}</button></div>`;}).join('')+`</div>`
-      :`<div class="hint" style="font-size:14.5px">מסמך פרויקט הוא סיכום ביקור בסגנון פתקים: כותבים טקסט, משימות, ומוסיפים סקיצות באמצע. בסוף מייצאים ל-Word.</div>`}
-    <div class="btnrow"><button class="primary" id="newProj">${ic('plus')} מסמך פרויקט חדש</button></div>
-    <div class="hint">מחיקת מסמך לא מוחקת את הסקיצות שבו.</div>`);
+      return `<div class="sk${doc&&doc.id===p.id?' cur':''}"><div class="meta"><b>${esc(p.name||tt("ללא שם"))}</b><small>${[m.client,fmtDate(m.date)].filter(Boolean).map(esc).join(' · ')}${n?` · ${n} ${tt("סקיצות")}`:''}</small></div>
+      ${doc&&doc.id===p.id?tt("<small style=\"color:var(--accent)\">פתוח</small>"):`<button class="chip" data-openp="${esc(p.id)}">${tt("פתיחה")}</button>`}
+      <button class="chip danger" data-delp="${esc(p.id)}" aria-label="${esc(tt("מחיקת מסמך"))}">${ic('trash')}</button></div>`;}).join('')+`</div>`
+      :`<div class="hint" style="font-size:14.5px">${tt("מסמך פרויקט הוא סיכום ביקור בסגנון פתקים: כותבים טקסט, משימות, ומוסיפים סקיצות באמצע. בסוף מייצאים ל-Word.")}</div>`}
+    <div class="btnrow"><button class="primary" id="newProj">${ic('plus')} ${tt("מסמך פרויקט חדש")}</button></div>
+    <div class="hint">${tt("מחיקת מסמך לא מוחקת את הסקיצות שבו.")}</div>`);
   $('#newProj').onclick=async()=>{ const p=newProject(); await store.save(p); openDoc(p); setTimeout(()=>{const t=$('#docTitle');t.focus();t.select();},50); };
   modalEl.querySelectorAll('[data-openp]').forEach(b=>b.onclick=()=>{const p=list.find(x=>x.id===b.dataset.openp);if(p)openDoc(p);});
   modalEl.querySelectorAll('[data-delp]').forEach(b=>b.onclick=async()=>{
-    if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='למחוק?';return;}
-    const id=b.dataset.delp; try{await store.remove(id);}catch(_){toast('המחיקה נכשלה');return;}
+    if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent=tt("למחוק?");return;}
+    const id=b.dataset.delp; try{await store.remove(id);}catch(_){toast(tt("המחיקה נכשלה"));return;}
     if(doc&&doc.id===id){docv.hidden=true;doc=null;setView('');}
     showProjects();
   });
@@ -1453,32 +1533,32 @@ async function svgPng(ex,scale){
   return await new Promise(r=>c.toBlob(r,'image/png'));
 }
 async function exportWord(){
-  if(!doc) return; await saveDocNow(); toast('מכין קובץ Word…');
-  let D; try{ D=await import('./vendor/docx.js'); }catch(e){ toast('ייצוא ל-Word לא זמין כרגע'); return; }
+  if(!doc) return; await saveDocNow(); toast(tt("מכין קובץ Word…"));
+  let D; try{ D=await import('./vendor/docx.js'); }catch(e){ toast(tt("ייצוא ל-Word לא זמין כרגע")); return; }
   const {Document,Packer,Paragraph,TextRun,ImageRun,HeadingLevel,Table,TableRow,TableCell,WidthType,BorderStyle,ShadingType}=D;
-  const R=(text,o={})=>new TextRun({text:String(text??''),rightToLeft:true,font:'Arial',size:o.size||22,sizeComplexScript:o.size||22,
+  const R=(text,o={})=>new TextRun({text:String(text??''),rightToLeft:RTL,font:'Arial',size:o.size||22,sizeComplexScript:o.size||22,
     bold:!!o.bold,boldComplexScript:!!o.bold,color:o.color,strike:!!o.strike});
-  const P=(kids,o={})=>new Paragraph({bidirectional:true,children:[].concat(kids),heading:o.heading,
+  const P=(kids,o={})=>new Paragraph({bidirectional:RTL,children:[].concat(kids),heading:o.heading,
     spacing:{before:o.before||0,after:o.after??120},indent:o.indent?{start:o.indent}:undefined});
   const out=[],m=doc.meta||{};
-  out.push(P(R(doc.name||'פרויקט',{size:40,bold:true,color:'1C232D'}),{after:60,heading:HeadingLevel.TITLE}));
-  const metaLine=[m.client&&('לקוח: '+m.client),m.address&&('כתובת: '+m.address),m.date&&('תאריך: '+fmtDate(m.date))].filter(Boolean).join('   ·   ');
+  out.push(P(R(doc.name||tt("פרויקט"),{size:40,bold:true,color:'1C232D'}),{after:60,heading:HeadingLevel.TITLE}));
+  const metaLine=[m.client&&(tt("לקוח: ")+m.client),m.address&&(tt("כתובת: ")+m.address),m.date&&(tt("תאריך: ")+fmtDate(m.date))].filter(Boolean).join('   ·   ');
   if(metaLine) out.push(P(R(metaLine,{color:'5D6774'}),{after:240}));
   const cell=(t,o={})=>new TableCell({children:[P(R(t,{bold:o.bold,size:20}),{after:0})],width:{size:o.w,type:WidthType.PERCENTAGE},
     shading:o.fill?{type:ShadingType.CLEAR,color:'auto',fill:o.fill}:undefined,margins:{top:60,bottom:60,left:100,right:100}});
   const areasTable=()=>{
-    const a=areasData(); if(!a.groups.length) return [P(R('אין עדיין סקיצות במסמך.',{color:'5D6774'}))];
+    const a=areasData(); if(!a.groups.length) return [P(R(tt("אין עדיין סקיצות במסמך."),{color:'5D6774'}))];
     const multi=a.groups.length>1;
-    const rows=[new TableRow({tableHeader:true,children:[cell('פריט',{bold:true,w:70,fill:'E8EBE4'}),cell('שטח (מ״ר)',{bold:true,w:30,fill:'E8EBE4'})]})];
+    const rows=[new TableRow({tableHeader:true,children:[cell(tt("פריט"),{bold:true,w:70,fill:'E8EBE4'}),cell(tt("שטח (")+uA()+')',{bold:true,w:30,fill:'E8EBE4'})]})];
     a.groups.forEach(g=>{
       rows.push(new TableRow({children:[new TableCell({columnSpan:2,children:[P(R(g.name,{bold:true,size:20}),{after:0})],shading:{type:ShadingType.CLEAR,color:'auto',fill:'F3F4F0'},margins:{top:60,bottom:60,left:100,right:100}})]}));
-      g.rows.forEach(r=>rows.push(new TableRow({children:[cell(r.name,{w:70}),cell(fmt(r.area),{w:30})]})));
-      if(multi) rows.push(new TableRow({children:[cell('סה״כ',{bold:true,w:70}),cell(fmt(g.total),{bold:true,w:30})]}));
+      g.rows.forEach(r=>rows.push(new TableRow({children:[cell(r.name,{w:70}),cell(fA(r.area),{w:30})]})));
+      if(multi) rows.push(new TableRow({children:[cell(tt("סה״כ"),{bold:true,w:70}),cell(fA(g.total),{bold:true,w:30})]}));
     });
-    rows.push(new TableRow({children:[cell(multi?'סה״כ בפרויקט':'סה״כ',{bold:true,w:70,fill:'F6E3D8'}),cell(fmt(a.total),{bold:true,w:30,fill:'F6E3D8'})]}));
+    rows.push(new TableRow({children:[cell(multi?tt("סה״כ בפרויקט"):tt("סה״כ"),{bold:true,w:70,fill:'F6E3D8'}),cell(fA(a.total),{bold:true,w:30,fill:'F6E3D8'})]}));
     const bd={style:BorderStyle.SINGLE,size:4,color:'D8DCD3'};
-    return [P(R('סיכום שטחים',{size:26,bold:true}),{before:200}),
-      new Table({visuallyRightToLeft:true,width:{size:100,type:WidthType.PERCENTAGE},rows,
+    return [P(R(tt("סיכום שטחים"),{size:26,bold:true}),{before:200}),
+      new Table({visuallyRightToLeft:RTL,width:{size:100,type:WidthType.PERCENTAGE},rows,
         borders:{top:bd,bottom:bd,left:bd,right:bd,insideHorizontal:bd,insideVertical:bd}}),P(R(''))];
   };
   for(const b of doc.blocks){
@@ -1494,33 +1574,33 @@ async function exportWord(){
       const s=skById(b.id); if(!s) continue; const ex=exportSVG(s,{header:false,table:false,foot:false,fs:28}); if(!ex) continue;
       const png=await svgPng(ex,1.6),buf=await png.arrayBuffer();
       let w=600,h=Math.round(600*ex.h/ex.w); if(h>720){w=Math.round(w*720/h);h=720;}
-      out.push(P(R(s.name||'סקיצה',{size:24,bold:true}),{before:200,after:60}));
+      out.push(P(R(s.name||tt("סקיצה"),{size:24,bold:true}),{before:200,after:60}));
       out.push(new Paragraph({children:[new ImageRun({type:'png',data:buf,transformation:{width:w,height:h}})],alignment:'center',spacing:{after:60}}));
-      out.push(P(R('סה״כ שטח: '+fmt(skArea(s))+' מ״ר',{color:'5D6774',size:20}),{after:200}));
+      out.push(P(R(tt("סה״כ שטח: ")+fAU(skArea(s)),{color:'5D6774',size:20}),{after:200}));
     }
     else if(b.t==='areas') out.push(...areasTable());
   }
-  out.push(P(R('הסקיצות להערכה בלבד ואינן מדידה מדויקת.',{color:'8A939E',size:18}),{before:300}));
-  const d=new Document({creator:'Sirtuti',title:doc.name||'פרויקט',
+  out.push(P(R(tt("הסקיצות להערכה בלבד ואינן מדידה מדויקת."),{color:'8A939E',size:18}),{before:300}));
+  const d=new Document({creator:'Sirtuti',title:doc.name||tt("פרויקט"),
     styles:{default:{document:{run:{font:'Arial'}}}},
     sections:[{properties:{page:{margin:{top:1100,bottom:1100,left:1000,right:1000}}},children:out}]});
   const blob=await Packer.toBlob(d);
-  const fname=((doc.name||'פרויקט').replace(/[\\/:*?"<>|]+/g,' ').trim()||'פרויקט')+'.docx';
-  try{ const r=await saveFile(fname,blob,'docx','מסמך Word');
-    if(r==='saved') toast('קובץ ה-Word נשמר'); else if(r==='cancel') $('#toast').hidden=true; else toast('שמירת קבצים לא זמינה כאן'); }
-  catch(e){ toast('שמירת הקובץ נכשלה'); }
+  const fname=((doc.name||tt("פרויקט")).replace(/[\\/:*?"<>|]+/g,' ').trim()||tt("פרויקט"))+'.docx';
+  try{ const r=await saveFile(fname,blob,'docx',tt("מסמך Word"));
+    if(r==='saved') toast(tt("קובץ ה-Word נשמר")); else if(r==='cancel') $('#toast').hidden=true; else toast(tt("שמירת קבצים לא זמינה כאן")); }
+  catch(e){ toast(tt("שמירת הקובץ נכשלה")); }
 }
 
 /* ---------- desktop downloads ---------- */
 // Reads the latest published GitHub release and shows the right installer for each OS.
 const REPO='joka-7/Sirtuti',RELEASES='https://github.com/'+REPO+'/releases/latest';
 const DL_OS=[
-  {k:'win',name:'Windows',files:[{re:/x64-setup\.exe$/i,label:'מתקין (מומלץ)'},{re:/\.msi$/i,label:'מתקין MSI (לארגונים)'}],
-   steps:'מריצים את הקובץ. אם מופיע מסך „Windows protected your PC", לוחצים More info ואז Run anyway. האזהרה מופיעה כי הקובץ לא חתום דיגיטלית.'},
-  {k:'mac',name:'macOS',files:[{re:/\.dmg$/i,label:'קובץ DMG (מעבדי Intel ו-Apple)'}],
-   steps:'פותחים את קובץ ה-DMG וגוררים את Sirtuti לתיקיית Applications. בפתיחה הראשונה: קליק ימני על האפליקציה ← Open ← Open.'},
-  {k:'linux',name:'Linux',files:[{re:/\.AppImage$/,label:'AppImage (כל הפצה)'},{re:/\.deb$/,label:'deb (Ubuntu / Debian)'},{re:/\.rpm$/,label:'rpm (Fedora / RHEL)'}],
-   steps:'AppImage: נותנים הרשאת הרצה (chmod +x) ומריצים. deb או rpm: מתקינים עם מנהל החבילות של ההפצה.'}
+  {k:'win',name:'Windows',files:[{re:/x64-setup\.exe$/i,label:tt("מתקין (מומלץ)")},{re:/\.msi$/i,label:tt("מתקין MSI (לארגונים)")}],
+   steps:tt("מריצים את הקובץ. אם מופיע מסך „Windows protected your PC\", לוחצים More info ואז Run anyway. האזהרה מופיעה כי הקובץ לא חתום דיגיטלית.")},
+  {k:'mac',name:'macOS',files:[{re:/\.dmg$/i,label:tt("קובץ DMG (מעבדי Intel ו-Apple)")}],
+   steps:tt("פותחים את קובץ ה-DMG וגוררים את Sirtuti לתיקיית Applications. בפתיחה הראשונה: קליק ימני על האפליקציה ← Open ← Open.")},
+  {k:'linux',name:'Linux',files:[{re:/\.AppImage$/,label:tt("AppImage (כל הפצה)")},{re:/\.deb$/,label:'deb (Ubuntu / Debian)'},{re:/\.rpm$/,label:'rpm (Fedora / RHEL)'}],
+   steps:tt("AppImage: נותנים הרשאת הרצה (chmod +x) ומריצים. deb או rpm: מתקינים עם מנהל החבילות של ההפצה.")}
 ];
 function detectOS(){
   const ua=navigator.userAgent||'',p=((navigator.userAgentData&&navigator.userAgentData.platform)||navigator.platform||'');
@@ -1535,31 +1615,188 @@ const verNum=v=>String(v||'').replace(/^v/,'').split('.').map(n=>parseInt(n,10)|
 const newer=(a,b)=>{const x=verNum(a),y=verNum(b);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return (x[i]||0)>(y[i]||0);}return false;};
 function openExternal(url){
   const T=window.__TAURI__;
-  if(IS_TAURI&&T&&T.opener){T.opener.openUrl(url).catch(()=>toast('לא ניתן לפתוח את הקישור'));return true;}
+  if(IS_TAURI&&T&&T.opener){T.opener.openUrl(url).catch(()=>toast(tt("לא ניתן לפתוח את הקישור")));return true;}
   return false;
 }
 async function showDownloads(){
-  const head=`<h2>אפליקציה למחשב<button class="ib" data-close aria-label="סגירה">${ic('x')}</button></h2>`;
-  modal(head+'<div class="hint">טוען את הגירסה האחרונה…</div>');
+  const head=`<h2>${tt("אפליקציה למחשב")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>`;
+  modal(head+tt("<div class=\"hint\">טוען את הגירסה האחרונה…</div>"));
   let rel=null; try{const r=await fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{Accept:'application/vnd.github+json'}});if(r.ok) rel=await r.json();}catch(e){}
   let mine=''; if(IS_TAURI&&window.__TAURI__&&window.__TAURI__.app){try{mine=await window.__TAURI__.app.getVersion();}catch(e){}}
   const os=detectOS(),assets=(rel&&rel.assets)||[],ver=rel?String(rel.tag_name||'').replace(/^v/,''):'';
   const mb=n=>(n/1048576).toFixed(n>1048576*10?0:1)+' MB';
   const order=[...DL_OS].sort((a,b)=>(b.k===os)-(a.k===os));
   let h=head;
-  if(IS_TAURI) h+=`<div class="dlver">${mine?`הגירסה שלך: <b dir="ltr">${esc(mine)}</b>`:''}${ver?(mine&&newer(ver,mine)?`<span class="new">יש גירסה חדשה: <b dir="ltr">${esc(ver)}</b>. מורידים ומתקינים מעל הקיימת, הסקיצות נשמרות.</span>`:(mine?'<span>זו הגירסה העדכנית.</span>':'')):''}</div>`;
-  else if(os==='android'||os==='ios') h+=`<div class="dlnote"><b>בטלפון לא צריך להוריד כלום.</b> ${os==='ios'?'ב-Safari: כפתור השיתוף ← „הוספה למסך הבית".':'ב-Chrome: תפריט ⋮ ← „התקנת אפליקציה".'} מקבלים אייקון ואפליקציה שעובדת גם בלי אינטרנט. הקבצים כאן מיועדים למחשב.</div>`;
-  if(!rel) h+=`<div class="err">לא הצלחתי לטעון את רשימת ההורדות. אפשר להוריד ישירות מ-GitHub.</div>`;
-  else h+=`<div class="hint" style="margin-bottom:10px">גירסה <span dir="ltr">${esc(ver)}</span>${rel.published_at?' · '+dateStr(Date.parse(rel.published_at)):''}. בוחרים את מערכת ההפעלה שלך:</div>`;
+  if(IS_TAURI) h+=`<div class="dlver">${mine?`${tt("הגירסה שלך:")} <b dir="ltr">${esc(mine)}</b>`:''}${ver?(mine&&newer(ver,mine)?`<span class="new">${tt("יש גירסה חדשה:")} <b dir="ltr">${esc(ver)}</b>${tt(". מורידים ומתקינים מעל הקיימת, הסקיצות נשמרות.")}</span>`:(mine?tt("<span>זו הגירסה העדכנית.</span>"):'')):''}</div>`;
+  else if(os==='android'||os==='ios') h+=`<div class="dlnote"><b>${tt("בטלפון לא צריך להוריד כלום.")}</b> ${os==='ios'?tt("ב-Safari: כפתור השיתוף ← „הוספה למסך הבית\"."):tt("ב-Chrome: תפריט ⋮ ← „התקנת אפליקציה\".")} ${tt("מקבלים אייקון ואפליקציה שעובדת גם בלי אינטרנט. הקבצים כאן מיועדים למחשב.")}</div>`;
+  if(!rel) h+=`<div class="err">${tt("לא הצלחתי לטעון את רשימת ההורדות. אפשר להוריד ישירות מ-GitHub.")}</div>`;
+  else h+=`<div class="hint" style="margin-bottom:10px">${tt("גירסה")} <span dir="ltr">${esc(ver)}</span>${rel.published_at?' · '+dateStr(Date.parse(rel.published_at)):''}${tt(". בוחרים את מערכת ההפעלה שלך:")}</div>`;
   if(rel) h+=order.map(o=>{
     const files=o.files.map(f=>{const a=assets.find(x=>f.re.test(x.name));return a?`<a class="dlfile" href="${esc(a.browser_download_url)}" target="_blank" rel="noopener" data-ext="1">${ic('dl')}<span><b>${f.label}</b><small dir="ltr">${esc(a.name)} · ${mb(a.size)}</small></span></a>`:'';}).join('');
     if(!files) return '';
-    return `<div class="dlos${o.k===os?' mine':''}"><div class="dlh"><b>${o.name}</b>${o.k===os?'<span class="tag">המחשב שלך</span>':''}</div>${files}<div class="hint">${o.steps}</div></div>`;
+    return `<div class="dlos${o.k===os?' mine':''}"><div class="dlh"><b>${o.name}</b>${o.k===os?tt("<span class=\"tag\">המחשב שלך</span>"):''}</div>${files}<div class="hint">${o.steps}</div></div>`;
   }).join('');
-  h+=`<div class="btnrow"><a class="chip" href="${RELEASES}" target="_blank" rel="noopener" data-ext="1">כל הגירסאות ב-GitHub</a></div>`;
-  if(!IS_TAURI) h+=`<div class="hint">אפשר גם בלי הורדה: ב-Chrome או Edge במחשב לוחצים על אייקון ההתקנה בשורת הכתובת. רק בדרך הזו אפשר להתחבר לחשבון Google.</div>`;
+  h+=`<div class="btnrow"><a class="chip" href="${RELEASES}" target="_blank" rel="noopener" data-ext="1">${tt("כל הגירסאות ב-GitHub")}</a></div>`;
+  if(!IS_TAURI) h+=`<div class="hint">${tt("אפשר גם בלי הורדה: ב-Chrome או Edge במחשב לוחצים על אייקון ההתקנה בשורת הכתובת. רק בדרך הזו אפשר להתחבר לחשבון Google.")}</div>`;
   modal(h);
   modalEl.querySelectorAll('[data-ext]').forEach(a=>a.addEventListener('click',e=>{if(openExternal(a.href)) e.preventDefault();}));
+}
+
+/* ---------- PDF export ---------- */
+// Pages are drawn on canvases (the browser handles Hebrew/RTL shaping), then packed into a PDF as JPEG images.
+function pdfFromCanvases(canvases){
+  const PW=595.28,PH=841.89,enc=new TextEncoder(),parts=[],offs=[]; let len=0;
+  const push=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length;};
+  const obj=(n,fn)=>{offs[n]=len;push(n+' 0 obj\n');fn();push('\nendobj\n');};
+  const jpg=c=>{const d=atob(c.toDataURL('image/jpeg',0.9).split(',')[1]),u=new Uint8Array(d.length);for(let i=0;i<d.length;i++)u[i]=d.charCodeAt(i);return u;};
+  push('%PDF-1.4\n'); push(new Uint8Array([37,226,227,207,211,10]));
+  const N=canvases.length;
+  obj(1,()=>push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2,()=>push('<< /Type /Pages /Kids ['+canvases.map((_,i)=>(3+3*i)+' 0 R').join(' ')+'] /Count '+N+' >>'));
+  canvases.forEach((c,i)=>{
+    const pn=3+3*i,cn=pn+1,im=pn+2,bytes=jpg(c),cs='q '+PW+' 0 0 '+PH+' 0 0 cm /Im0 Do Q';
+    obj(pn,()=>push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PW+' '+PH+'] /Resources << /XObject << /Im0 '+im+' 0 R >> >> /Contents '+cn+' 0 R >>'));
+    obj(cn,()=>{push('<< /Length '+cs.length+' >>\nstream\n');push(cs);push('\nendstream');});
+    obj(im,()=>{push('<< /Type /XObject /Subtype /Image /Width '+c.width+' /Height '+c.height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+bytes.length+' >>\nstream\n');push(bytes);push('\nendstream');});
+  });
+  const n=3+3*N,xref=len;
+  let x='xref\n0 '+n+'\n0000000000 65535 f \n'; for(let i=1;i<n;i++) x+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+  push(x); push('trailer\n<< /Size '+n+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
+  return new Blob(parts,{type:'application/pdf'});
+}
+class PdfPages{
+  constructor(){ this.PW=595.28;this.PH=841.89;this.K=2.4;this.M=46;this.pages=[];this.newPage(); }
+  get W(){return this.PW-2*this.M;}
+  newPage(){
+    const c=document.createElement('canvas'); c.width=Math.round(this.PW*this.K); c.height=Math.round(this.PH*this.K);
+    const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.direction=RTL?'rtl':'ltr'; x.textBaseline='alphabetic';
+    this.c=c;this.x=x;this.y=this.M;this.pages.push(c);
+  }
+  need(h){ if(this.y+h>this.PH-this.M-16) this.newPage(); }
+  sx(off){ return (RTL?this.PW-this.M-off:this.M+off); }          // start edge + offset, in pt
+  font(sz,w){ this.x.font=(w||400)+' '+(sz*this.K)+'px Rubik, Arial, "Noto Sans Hebrew", sans-serif'; }
+  lines(str,sz,w,maxW){
+    this.font(sz,w); const out=[];
+    String(str).split('\n').forEach(par=>{ let line='';
+      par.split(/\s+/).filter(Boolean).forEach(wd=>{ const t=line?line+' '+wd:wd;
+        if(this.x.measureText(t).width/this.K>maxW&&line){out.push(line);line=wd;} else line=t; });
+      out.push(line); });
+    return out;
+  }
+  text(str,o={}){
+    const sz=o.size||11,lh=o.lh||1.45,ind=o.indent||0,ls=this.lines(str,sz,o.weight,this.W-ind);
+    ls.forEach(l=>{ this.need(sz*lh); this.font(sz,o.weight); this.x.fillStyle=o.color||'#1C232D'; this.x.textAlign='start';
+      this.x.fillText(l,this.sx(ind)*this.K,(this.y+sz)*this.K); this.y+=sz*lh; });
+    this.y+=o.after??4;
+  }
+  rule(color){ this.need(8); this.x.fillStyle=color||'#D8DCD3'; this.x.fillRect(this.M*this.K,(this.y+2)*this.K,this.W*this.K,1*this.K); this.y+=10; }
+  checkbox(done,label){
+    const sz=11; this.need(sz*1.5); const bx=RTL?this.PW-this.M-10:this.M,by=this.y+1.5,K=this.K;
+    this.x.strokeStyle='#5D6774'; this.x.lineWidth=1*K; this.x.strokeRect(bx*K,by*K,10*K,10*K);
+    if(done){ this.x.strokeStyle='#C4501A'; this.x.lineWidth=1.6*K; this.x.beginPath(); this.x.moveTo((bx+2)*K,(by+5)*K); this.x.lineTo((bx+4.3)*K,(by+7.8)*K); this.x.lineTo((bx+8.4)*K,(by+2.2)*K); this.x.stroke(); }
+    this.text(label,{indent:17,color:done?'#5D6774':undefined,after:2});
+  }
+  async image(src,w,h){
+    let s=Math.min(1,this.W/w,330/h); const dw=w*s,dh=h*s; this.need(dh+6);
+    const img=new Image(); img.src=src; await img.decode();
+    const x0=this.M+(this.W-dw)/2; this.x.drawImage(img,x0*this.K,this.y*this.K,dw*this.K,dh*this.K);
+    this.x.strokeStyle='#D8DCD3'; this.x.lineWidth=1*this.K; this.x.strokeRect(x0*this.K,this.y*this.K,dw*this.K,dh*this.K);
+    this.y+=dh+6;
+  }
+  // cols: [{w:fraction, end:bool}] ; rows: {cells:[], bold, fill, span}
+  table(cols,rows){
+    const K=this.K,rh=19,pad=6;
+    rows.forEach(r=>{
+      this.need(rh); const top=this.y;
+      if(r.fill){ this.x.fillStyle=r.fill; this.x.fillRect(this.M*K,top*K,this.W*K,rh*K); }
+      let off=0;
+      cols.forEach((c,i)=>{ const cw=c.w*this.W,txt=r.cells[i]; 
+        if(txt!=null&&txt!==''&&!(r.span&&i>0)){
+          this.font(9.5,r.bold?700:400); this.x.fillStyle='#1C232D';
+          const maxW=(r.span?this.W:cw)-2*pad; let t=String(txt);
+          while(t.length>1&&this.x.measureText(t).width/K>maxW) t=t.slice(0,-2)+'…';
+          if(c.end&&!r.span){ this.x.textAlign='end'; this.x.fillText(t,this.sx(off+cw-pad)*K,(top+13)*K); }
+          else { this.x.textAlign='start'; this.x.fillText(t,this.sx(off+pad)*K,(top+13)*K); }
+        }
+        off+=cw; });
+      this.x.fillStyle='#D8DCD3'; this.x.fillRect(this.M*K,(top+rh)*K,this.W*K,0.8*K);
+      this.y+=rh;
+    });
+    this.x.textAlign='start'; this.y+=8;
+  }
+  finish(foot){
+    const n=this.pages.length;
+    this.pages.forEach((c,i)=>{ const x=c.getContext('2d'); x.direction=RTL?'rtl':'ltr'; x.font='400 '+(8*this.K)+'px Rubik, Arial, sans-serif'; x.fillStyle='#8A939E'; x.textAlign='center';
+      x.fillText((foot?foot+'   ·   ':'')+(i+1)+' / '+n,(this.PW/2)*this.K,(this.PH-22)*this.K); });
+    return pdfFromCanvases(this.pages);
+  }
+}
+const svgSrc=ex=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ex.svg);
+async function sketchPdf(s){
+  if(document.fonts&&document.fonts.ready) await document.fonts.ready;
+  const ex=exportSVG(s,{header:false,table:false,foot:false,fs:26}); if(!ex) return null;
+  const P=new PdfPages(),rows=rowsData(s),tot=rows.filter(r=>r.inc).reduce((t,r)=>t+r.area,0);
+  P.text(s.name||tt('סקיצה'),{size:20,weight:700,after:2});
+  P.text(dateStr(Date.now())+'  ·  '+(IMP?tt('מידות ברגל ואינץ׳'):tt('מידות במטרים'))+'  ·  '+tt('סה״כ שטח: ')+fAU(tot),{size:10,color:'#5D6774',after:2});
+  P.rule(); await P.image(svgSrc(ex),ex.w,ex.h);
+  if(rows.length){
+    P.table([{w:.4},{w:.2},{w:.2,end:true},{w:.2,end:true}],
+      [{cells:[tt('שם'),tt('צורה'),tt('שטח (')+uA()+')',tt('היקף (')+uL()+')'],bold:true,fill:'#E8EBE4'}]
+      .concat(rows.map(r=>({cells:[r.name+(r.inc?'':' '+tt('(לא נספר)')),r.kind,fA(r.area),fL(r.per)]})))
+      .concat([{cells:[tt('סה״כ'),'',fA(tot),''],bold:true,fill:'#F6E3D8'}]));
+  }
+  return P.finish(tt('סקיצה להערכה בלבד, אינה מדידה מדויקת'));
+}
+async function docPdf(){
+  if(document.fonts&&document.fonts.ready) await document.fonts.ready;
+  const P=new PdfPages(),m=doc.meta||{};
+  P.text(doc.name||tt('פרויקט'),{size:22,weight:700,after:2});
+  const meta=[m.client&&(tt('לקוח: ')+m.client),m.address&&(tt('כתובת: ')+m.address),m.date&&(tt('תאריך: ')+fmtDate(m.date))].filter(Boolean).join('   ·   ');
+  if(meta) P.text(meta,{size:10,color:'#5D6774',after:2});
+  P.rule();
+  for(const b of doc.blocks){
+    if(b.t==='h'&&b.v){ P.y+=6; P.text(b.v,{size:15,weight:700,after:3}); }
+    else if(b.t==='p'){ String(b.v||'').split('\n').forEach(line=>{ const li=line.match(/^\s*[-•*]\s+(.*)$/);
+        if(li) P.text('•  '+li[1],{indent:12,after:1}); else if(line.trim()) P.text(line,{after:1}); else P.y+=8; }); P.y+=4; }
+    else if(b.t==='todo') P.checkbox(!!b.done,b.v||'');
+    else if(b.t==='sk'){ const s=skById(b.id); if(!s) continue; const ex=exportSVG(s,{header:false,table:false,foot:false,fs:28}); if(!ex) continue;
+      P.y+=4; P.text(s.name||tt('סקיצה'),{size:12,weight:700,after:3}); await P.image(svgSrc(ex),ex.w,ex.h);
+      P.text(tt('סה״כ שטח: ')+fAU(skArea(s)),{size:9.5,color:'#5D6774',after:8}); }
+    else if(b.t==='areas'){ const a=areasData(); P.y+=4; P.text(tt('סיכום שטחים'),{size:13,weight:700,after:4});
+      if(!a.groups.length){ P.text(tt('אין עדיין סקיצות במסמך.'),{color:'#5D6774'}); continue; }
+      const multi=a.groups.length>1,rows=[{cells:[tt('פריט'),tt('שטח (')+uA()+')'],bold:true,fill:'#E8EBE4'}];
+      a.groups.forEach(g=>{ rows.push({cells:[g.name,''],bold:true,fill:'#F3F4F0',span:true});
+        g.rows.forEach(r=>rows.push({cells:[r.name,fA(r.area)]})); if(multi) rows.push({cells:[tt('סה״כ'),fA(g.total)],bold:true}); });
+      rows.push({cells:[multi?tt('סה״כ בפרויקט'):tt('סה״כ'),fA(a.total)],bold:true,fill:'#F6E3D8'});
+      P.table([{w:.7},{w:.3,end:true}],rows); }
+  }
+  return P.finish(tt('הסקיצות להערכה בלבד ואינן מדידה מדויקת.'));
+}
+const safeName=(n,fb)=>(String(n||'').replace(/[\\/:*?"<>|]+/g,' ').trim()||fb);
+async function savePdf(blob,name){
+  if(!blob){toast(tt('אין צורות לשמירה'));return;}
+  try{ const r=await saveFile(name+'.pdf',blob,'pdf','PDF');
+    if(r==='saved') toast(tt('קובץ ה-PDF נשמר')); else if(r==='cancel') $('#toast').hidden=true; else toast(tt('שמירת קבצים לא זמינה כאן')); }
+  catch(e){ toast(tt('שמירת הקובץ נכשלה')); }
+}
+function exportMenu(opts){
+  modal(`<h2>${tt('ייצוא')}<button class="ib" data-close aria-label="${esc(tt('סגירה'))}">${ic('x')}</button></h2><div class="expopts">`+
+    opts.map((o,i)=>`<button class="expopt" data-exp="${i}">${ic(o.icon)}<span><b>${o.label}</b><small>${o.desc}</small></span></button>`).join('')+`</div>`);
+  modalEl.querySelectorAll('[data-exp]').forEach(b=>b.onclick=()=>{closeModal();opts[+b.dataset.exp].run();});
+}
+
+/* ---------- settings ---------- */
+function showSettings(){
+  modal(`<h2>${tt('הגדרות')}<button class="ib" data-close aria-label="${esc(tt('סגירה'))}">${ic('x')}</button></h2>
+    <div class="setg"><b>${tt('שפה')}</b><div class="tabs">
+      <button data-lang="he" class="${LANG==='he'?'on':''}" lang="he">עברית</button><button data-lang="en" class="${LANG==='en'?'on':''}" lang="en">English</button><button data-lang="fr" class="${LANG==='fr'?'on':''}" lang="fr">Français</button></div></div>
+    <div class="setg"><b>${tt('יחידות מידה')}</b><div class="tabs">
+      <button data-units="m" class="${!IMP?'on':''}">${tt('מטרי')}<small>${tt('מ׳')} · ${tt('מ״ר')}</small></button>
+      <button data-units="ft" class="${IMP?'on':''}">${tt('אמריקאי')}<small>ft · in · ft²</small></button></div>
+      <div class="hint">${tt('המידות נשמרות תמיד במדויק, ושינוי היחידות משנה רק את התצוגה וההזנה. ביחידות אמריקאיות מקלידים למשל 12\' 6" או 12.5.')}</div></div>`);
+  const apply=async(k,v)=>{ try{localStorage.setItem(k,v);}catch(e){} await flushSketch(); if(doc&&docSaveT) await saveDocNow(); location.reload(); };
+  modalEl.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{ if(b.dataset.lang!==LANG) apply('sirtuti.lang',b.dataset.lang); });
+  modalEl.querySelectorAll('[data-units]').forEach(b=>b.onclick=()=>{ if(b.dataset.units!==UNITS) apply('sirtuti.units',b.dataset.units); });
 }
 
 /* ---------- boot ---------- */
