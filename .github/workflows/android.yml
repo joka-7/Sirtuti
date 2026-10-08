@@ -53,6 +53,7 @@ jobs:
       - name: Sign APK
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_B64_2: ${{ secrets.ANDROID_KEYSTORE_B64_2 }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
@@ -60,6 +61,8 @@ jobs:
           BT=$ANDROID_HOME/build-tools/34.0.0
           APK=$(find src-tauri/gen/android/app/build/outputs/apk -name '*release-unsigned.apk' | head -1)
           echo "Unsigned APK: $APK"
+          # the keystore may be split into two secrets (some clipboards cut long lines at 2000 chars)
+          KEYSTORE_B64="$KEYSTORE_B64$KEYSTORE_B64_2"
           if [ -n "$KEYSTORE_B64" ]; then
             # tolerate spaces/line breaks picked up while pasting the secrets
             printf '%s' "$KEYSTORE_B64" | tr -d ' \r\n\t' | base64 -d > release.jks 2>/dev/null \

@@ -85,7 +85,7 @@ UI strings in `web/index.html` are Hebrew and wrapped in `tt("...")`; `web/i18n.
 4. The workflow publishes release `v<version>` with the Windows, macOS and Linux installers, then builds, signs and attaches the Android APK.
 
 ### Android signing
-The APK is signed with the keystore in the repository secrets `ANDROID_KEYSTORE_B64` (base64 of a `.jks` with alias `sirtuti`) and `ANDROID_KEY_PASSWORD` (store and key password). Keep the same keystore forever: Android only installs an update over an existing app when it is signed with the same key. Without these secrets the workflow signs with a throwaway key and prints a warning; such builds must be uninstalled before installing the next one.
+The APK is signed with the keystore in the repository secrets `ANDROID_KEYSTORE_B64` (base64 of a `.jks` with alias `sirtuti`; it may be split, with the rest in `ANDROID_KEYSTORE_B64_2`) and `ANDROID_KEY_PASSWORD` (store and key password). Keep the same keystore forever: Android only installs an update over an existing app when it is signed with the same key. Without these secrets the workflow signs with a throwaway key and prints a warning; such builds must be uninstalled before installing the next one.
 
 Android builds need the Android SDK and NDK locally (`npm run tauri android init`, then `npm run tauri android build --apk`); see https://v2.tauri.app/start/prerequisites/.
 
