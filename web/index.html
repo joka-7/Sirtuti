@@ -597,6 +597,7 @@ function newSketch(){
 // Firebase) mirrors it when available. Local entries carry `cloud:<uid>` once Firebase confirmed them.
 const LS='sketcher.v1';
 const IS_TAURI=!!(window.__TAURI_INTERNALS__||window.__TAURI__);
+const IS_ANDROID=/android/i.test(navigator.userAgent||'');
 const clone=o=>JSON.parse(JSON.stringify(o));
 const local={
   read(){try{return JSON.parse(localStorage.getItem(LS)||'{}')||{}}catch(e){return {}}},
@@ -617,7 +618,7 @@ const folder={
   map(){try{return JSON.parse(localStorage.getItem(this.M)||'{}')||{}}catch(e){return {}}},
   setMap(m){try{localStorage.setItem(this.M,JSON.stringify(m))}catch(e){}},
   fs(){return window.__TAURI__&&window.__TAURI__.fs},
-  supported(){return IS_TAURI&&!!this.fs()&&!!(window.__TAURI__.dialog)},
+  supported(){return IS_TAURI&&!IS_ANDROID&&!!this.fs()&&!!(window.__TAURI__.dialog)},
   on(){return this.supported()&&!!this.path},
   join(n){const p=this.path,sep=p.includes('\\')?'\\':'/';return p.replace(/[\\/]+$/,'')+sep+n;},
   fname(s){const nm=(s.name||tt("סקיצה")).replace(/[\\/:*?"<>|\u0000-\u001f]+/g,' ').trim().slice(0,60)||tt("סקיצה");return nm+' ('+String(s.id).slice(-6)+').sirtuti.json';},
@@ -1240,7 +1241,7 @@ async function showList(){
      ${s.id===sk.id?tt("<small style=\"color:var(--accent)\">פתוחה</small>"):`<button class="chip" data-open="${s.id}">${tt("פתיחה")}</button>`}
      <button class="chip danger" data-delsk="${s.id}" aria-label="${esc(tt("מחיקת סקיצה"))}">${ic('trash')}</button></div>`).join('')+`</div>
    ${folder.supported()?`<div class="fold"><b>${tt("שמירה אוטומטית לתיקייה")}</b>${folder.path?`<span dir="ltr" class="fpath">${esc(folder.path)}</span><div class="btnrow" style="margin-top:6px"><button class="chip" id="fdPick">${tt("החלפת תיקייה")}</button><button class="chip" id="fdStop">${tt("הפסקה")}</button></div>`:`<span>${tt("כל סקיצה תישמר גם כקובץ בתיקייה שתבחר, ותתעדכן בכל שינוי. בחר תיקייה של Google Drive, OneDrive או Dropbox כדי לקבל גיבוי בענן.")}</span><div class="btnrow" style="margin-top:6px"><button class="primary" id="fdPick">${tt("בחירת תיקייה")}</button></div>`}</div>`:''}
-   <div class="btnrow"><button class="primary" id="newSk">${tt("סקיצה חדשה")}</button><button class="chip" id="bkOut">${ic('dl')} ${tt("גיבוי לקובץ")}</button><button class="chip" id="bkIn">${tt("ייבוא מקובץ")}</button><button class="chip" id="setBtn">${ic('gear')} ${tt("הגדרות")}</button><button class="chip" id="dlApp">${ic('monitor')} ${IS_TAURI?tt("עדכונים"):tt("אפליקציה למחשב")}</button><input type="file" id="bkFile" accept=".json,application/json" hidden></div>
+   <div class="btnrow"><button class="primary" id="newSk">${tt("סקיצה חדשה")}</button><button class="chip" id="bkOut">${ic('dl')} ${tt("גיבוי לקובץ")}</button><button class="chip" id="bkIn">${tt("ייבוא מקובץ")}</button><button class="chip" id="setBtn">${ic('gear')} ${tt("הגדרות")}</button><button class="chip" id="dlApp">${ic('monitor')} ${IS_TAURI?tt("עדכונים"):tt("הורדת האפליקציה")}</button><input type="file" id="bkFile" accept=".json,application/json" hidden></div>
    <div class="hint">${store.mode==='claude'?tt("הסקיצות נשמרות בחשבון שלך וזמינות מכל מכשיר."):store.mode==='firebase'?tt("הסקיצות נשמרות בחשבון Google שלך ומסתנכרנות בין המכשירים."):(IS_TAURI?tt("הסקיצות נשמרות במחשב הזה."):tt("הסקיצות נשמרות בדפדפן הזה בלבד."))+(cloud.configured()&&!cloud.user?tt(" התחבר לחשבון Google כדי לשמור אותן גם בענן."):tt(" קובץ גיבוי מאפשר להעביר אותן למכשיר אחר."))}</div>`);
   if($('#fdPick')) $('#fdPick').onclick=async()=>{ if(await folder.choose()){ setStatus(savedText()); showList(); } };
   if($('#fdStop')) $('#fdStop').onclick=()=>{ folder.stop(); setStatus(savedText()); showList(); };
@@ -1599,6 +1600,8 @@ const DL_OS=[
    steps:tt("מריצים את הקובץ. אם מופיע מסך „Windows protected your PC\", לוחצים More info ואז Run anyway. האזהרה מופיעה כי הקובץ לא חתום דיגיטלית.")},
   {k:'mac',name:'macOS',files:[{re:/\.dmg$/i,label:tt("קובץ DMG (מעבדי Intel ו-Apple)")}],
    steps:tt("פותחים את קובץ ה-DMG וגוררים את Sirtuti לתיקיית Applications. בפתיחה הראשונה: קליק ימני על האפליקציה ← Open ← Open.")},
+  {k:'android',name:'Android',files:[{re:/android\.apk$/i,label:tt("קובץ APK")}],
+   steps:tt("מורידים את הקובץ ופותחים אותו. בפעם הראשונה הטלפון יבקש לאשר התקנה מהדפדפן (מקורות לא ידועים): מאשרים וממשיכים. גירסה חדשה מתקינים באותה דרך, מעל הקיימת.")},
   {k:'linux',name:'Linux',files:[{re:/\.AppImage$/,label:tt("AppImage (כל הפצה)")},{re:/\.deb$/,label:'deb (Ubuntu / Debian)'},{re:/\.rpm$/,label:'rpm (Fedora / RHEL)'}],
    steps:tt("AppImage: נותנים הרשאת הרצה (chmod +x) ומריצים. deb או rpm: מתקינים עם מנהל החבילות של ההפצה.")}
 ];
@@ -1619,7 +1622,7 @@ function openExternal(url){
   return false;
 }
 async function showDownloads(){
-  const head=`<h2>${tt("אפליקציה למחשב")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>`;
+  const head=`<h2>${IS_TAURI?tt("עדכונים"):tt("הורדת האפליקציה")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>`;
   modal(head+tt("<div class=\"hint\">טוען את הגירסה האחרונה…</div>"));
   let rel=null; try{const r=await fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{Accept:'application/vnd.github+json'}});if(r.ok) rel=await r.json();}catch(e){}
   let mine=''; if(IS_TAURI&&window.__TAURI__&&window.__TAURI__.app){try{mine=await window.__TAURI__.app.getVersion();}catch(e){}}
@@ -1628,7 +1631,8 @@ async function showDownloads(){
   const order=[...DL_OS].sort((a,b)=>(b.k===os)-(a.k===os));
   let h=head;
   if(IS_TAURI) h+=`<div class="dlver">${mine?`${tt("הגירסה שלך:")} <b dir="ltr">${esc(mine)}</b>`:''}${ver?(mine&&newer(ver,mine)?`<span class="new">${tt("יש גירסה חדשה:")} <b dir="ltr">${esc(ver)}</b>${tt(". מורידים ומתקינים מעל הקיימת, הסקיצות נשמרות.")}</span>`:(mine?tt("<span>זו הגירסה העדכנית.</span>"):'')):''}</div>`;
-  else if(os==='android'||os==='ios') h+=`<div class="dlnote"><b>${tt("בטלפון לא צריך להוריד כלום.")}</b> ${os==='ios'?tt("ב-Safari: כפתור השיתוף ← „הוספה למסך הבית\"."):tt("ב-Chrome: תפריט ⋮ ← „התקנת אפליקציה\".")} ${tt("מקבלים אייקון ואפליקציה שעובדת גם בלי אינטרנט. הקבצים כאן מיועדים למחשב.")}</div>`;
+  else if(os==='android') h+=`<div class="dlnote">${tt("להתקנה באנדרואיד: מורידים את קובץ ה-APK למטה. אפשר גם בלי הורדה: ב-Chrome, תפריט ⋮ ← „התקנת אפליקציה\".")}</div>`;
+  else if(os==='ios') h+=`<div class="dlnote"><b>${tt("בטלפון לא צריך להוריד כלום.")}</b> ${os==='ios'?tt("ב-Safari: כפתור השיתוף ← „הוספה למסך הבית\"."):tt("ב-Chrome: תפריט ⋮ ← „התקנת אפליקציה\".")} ${tt("מקבלים אייקון ואפליקציה שעובדת גם בלי אינטרנט. הקבצים כאן מיועדים למחשב.")}</div>`;
   if(!rel) h+=`<div class="err">${tt("לא הצלחתי לטעון את רשימת ההורדות. אפשר להוריד ישירות מ-GitHub.")}</div>`;
   else h+=`<div class="hint" style="margin-bottom:10px">${tt("גירסה")} <span dir="ltr">${esc(ver)}</span>${rel.published_at?' · '+dateStr(Date.parse(rel.published_at)):''}${tt(". בוחרים את מערכת ההפעלה שלך:")}</div>`;
   if(rel) h+=order.map(o=>{

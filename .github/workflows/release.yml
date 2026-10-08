@@ -1,6 +1,7 @@
 name: Desktop release
 
-# Builds the desktop installers (Windows, macOS, Linux) and attaches them to a draft GitHub release.
+# Builds the desktop installers (Windows, macOS, Linux) and the Android APK, and publishes them
+# as a GitHub release (tag v<version> from src-tauri/tauri.conf.json).
 # Trigger: push a tag like v0.2.0, or run it manually from the Actions tab.
 on:
   push:
@@ -54,6 +55,75 @@ jobs:
           tagName: v__VERSION__
           releaseName: "Sirtuti v__VERSION__"
           releaseBody: "Download the installer for your system from the assets below."
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+  android:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK and build tools
+        run: |
+          sdkmanager --install "ndk;27.0.12077973" "build-tools;34.0.0" "platforms;android-34" > /dev/null
+          echo "NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - run: npm ci
+
+      - name: Generate Android project
+        run: |
+          npx tauri android init --ci
+          npx tauri icon tools/icon-1024.png
+
+      - name: Build APK
+        run: npx tauri android build --apk --target aarch64 armv7
+
+      - name: Sign APK
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          BT=$ANDROID_HOME/build-tools/34.0.0
+          APK=$(find src-tauri/gen/android/app/build/outputs/apk -name '*release-unsigned.apk' | head -1)
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > release.jks
+          else
+            echo "::warning::ANDROID_KEYSTORE_B64 secret not set: signing with a temporary key. Phones must uninstall before installing the next build."
+            KEY_PASSWORD=temporary-$RANDOM$RANDOM
+            keytool -genkeypair -keystore release.jks -alias sirtuti -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$KEY_PASSWORD" -keypass "$KEY_PASSWORD" -dname "CN=Sirtuti temporary"
+          fi
+          "$BT/zipalign" -f -p 4 "$APK" aligned.apk
+          "$BT/apksigner" sign --ks release.jks --ks-key-alias sirtuti --ks-pass "pass:$KEY_PASSWORD" --key-pass "pass:$KEY_PASSWORD" \
+            --out "Sirtuti_${VERSION}_android.apk" aligned.apk
+          "$BT/apksigner" verify "Sirtuti_${VERSION}_android.apk"
+          rm -f release.jks
+
+      - name: Attach APK to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "v$VERSION" "Sirtuti_${VERSION}_android.apk" --clobber

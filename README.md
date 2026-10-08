@@ -5,7 +5,7 @@ Dimensioned sketches for site visits. Draw rooms, lots and other elements, enter
 The app is available in Hebrew (RTL), English and French, with metric or imperial (feet/inches) units.
 
 **Web app:** https://joka-7.github.io/Sirtuti/
-**Desktop installers:** see [Releases](https://github.com/joka-7/Sirtuti/releases)
+**Desktop installers and Android APK:** see [Releases](https://github.com/joka-7/Sirtuti/releases/latest)
 
 ## Features
 - Ready-made shapes: rectangle, triangle, trapezoid, regular polygon, L-shape, circle, dimension line, and a free polygon defined by side lengths and angles.
@@ -24,6 +24,7 @@ The app is available in Hebrew (RTL), English and French, with metric or imperia
 ## Install
 - **Android / desktop Chrome or Edge:** open the web app → browser menu → *Install app*.
 - **iPhone:** open in Safari → Share → *Add to Home Screen*.
+- **Android app (APK):** download `Sirtuti_<version>_android.apk` from the latest release and open it; allow installing from your browser when asked. Install new versions over the old one. The auto-save folder and Google sign-in are not available in the Android app; use backup files or the web app.
 - **Desktop app:** in the app, open *My sketches* (הסקיצות שלי) → *Desktop app* (אפליקציה למחשב). It detects your OS and links the right installer from the latest release. Or download the installer for Windows (`.msi` / `.exe`), macOS (`.dmg`) or Linux (`.AppImage` / `.deb`) from Releases. The builds are not code-signed, so Windows SmartScreen and macOS Gatekeeper will warn on first launch (macOS: right-click the app → *Open*).
 
 ## Where sketches are stored
@@ -80,8 +81,13 @@ UI strings in `web/index.html` are Hebrew and wrapped in `tt("...")`; `web/i18n.
 ## Releasing
 1. Bump the version in `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` and `package.json`.
 2. Bump `VERSION` in `web/sw.js` so installed PWAs pick up the new files.
-3. Push to `main` (web app deploys automatically), then tag: `git tag v0.2.0 && git push origin v0.2.0`.
-4. The release workflow builds the installers into a draft release. Review it and click *Publish*.
+3. Push to `main` (web app deploys automatically), then run **Actions → Desktop release → Run workflow** (or push a tag like `v0.6.0`).
+4. The workflow publishes release `v<version>` with the Windows, macOS and Linux installers, then builds, signs and attaches the Android APK.
+
+### Android signing
+The APK is signed with the keystore in the repository secrets `ANDROID_KEYSTORE_B64` (base64 of a `.jks` with alias `sirtuti`) and `ANDROID_KEY_PASSWORD` (store and key password). Keep the same keystore forever: Android only installs an update over an existing app when it is signed with the same key. Without these secrets the workflow signs with a throwaway key and prints a warning; such builds must be uninstalled before installing the next one.
+
+Android builds need the Android SDK and NDK locally (`npm run tauri android init`, then `npm run tauri android build --apk`); see https://v2.tauri.app/start/prerequisites/.
 
 ## License
 MIT
