@@ -61,17 +61,30 @@ jobs:
           APK=$(find src-tauri/gen/android/app/build/outputs/apk -name '*release-unsigned.apk' | head -1)
           echo "Unsigned APK: $APK"
           if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | base64 -d > release.jks
+            # tolerate spaces/line breaks picked up while pasting the secrets
+            printf '%s' "$KEYSTORE_B64" | tr -d ' \r\n\t' | base64 -d > release.jks 2>/dev/null \
+              || { echo "::error::ANDROID_KEYSTORE_B64 is not valid base64. Paste the long line again, exactly as in the file."; exit 1; }
+            KEY_PASSWORD=$(printf '%s' "$KEY_PASSWORD" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            if ! keytool -list -keystore release.jks -storepass "$KEY_PASSWORD" -alias sirtuti > /dev/null 2>&1; then
+              if ! keytool -list -keystore release.jks -storepass "$KEY_PASSWORD" > /dev/null 2>&1; then
+                echo "::error::ANDROID_KEY_PASSWORD does not open the keystore (size $(stat -c %s release.jks) bytes). Check both secrets."
+              else
+                echo "::error::The keystore has no key with alias 'sirtuti'."
+              fi
+              exit 1
+            fi
+            echo "::notice::Signing with the permanent key: $(keytool -list -keystore release.jks -storepass "$KEY_PASSWORD" -alias sirtuti | grep -o 'SHA-256.*')"
           else
             echo "::warning::ANDROID_KEYSTORE_B64 secret not set: signing with a temporary key. Phones must uninstall before installing the next build."
             KEY_PASSWORD=temporary-$RANDOM$RANDOM
             keytool -genkeypair -keystore release.jks -alias sirtuti -keyalg RSA -keysize 2048 -validity 10000 \
               -storepass "$KEY_PASSWORD" -keypass "$KEY_PASSWORD" -dname "CN=Sirtuti temporary"
           fi
-          "$BT/zipalign" -f -p 4 "$APK" aligned.apk
+          [ -n "$APK" ] || { echo "::error::No unsigned APK found"; exit 1; }
+          "$BT/zipalign" -f -p 4 "$APK" aligned.apk || { echo "::error::zipalign failed"; exit 1; }
           "$BT/apksigner" sign --ks release.jks --ks-key-alias sirtuti --ks-pass "pass:$KEY_PASSWORD" --key-pass "pass:$KEY_PASSWORD" \
             --out "Sirtuti_${VERSION}_android.apk" aligned.apk
-          "$BT/apksigner" verify "Sirtuti_${VERSION}_android.apk"
+          "$BT/apksigner" verify "Sirtuti_${VERSION}_android.apk" || { echo "::error::apksigner could not verify the signed APK"; exit 1; }
           rm -f release.jks
 
       - name: Attach APK to the release
