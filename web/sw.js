@@ -1,6 +1,6 @@
 // Sirtuti service worker: app shell cached for offline use.
 // Bump VERSION on every release so phones pick up the new files.
-const VERSION = 'sirtuti-v4';
+const VERSION = 'sirtuti-v5';
 const SHELL = ['./', 'index.html', 'firebase-config.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {

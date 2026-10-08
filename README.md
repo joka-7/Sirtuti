@@ -14,6 +14,7 @@ The app UI is in Hebrew (RTL).
 - Area and perimeter per shape (each can be hidden), an area summary that can be copied as text.
 - Export to PNG with all dimensions and an area table.
 - **Project documents:** notes-style site-visit summaries with client, address and date, headings, text (lines starting with `-` become bullets), checklists, sketches placed inline, and an automatic area summary across all sketches in the document. Tap a sketch to edit it and return to the document. Export to Word (`.docx`, right-to-left) with the sketches as images.
+- Desktop app shows its version and tells you when a newer release is available.
 - Optional Google sign-in (Firebase) to sync sketches across devices.
 - Backup/restore of all sketches to a JSON file.
 - Desktop app: auto-save every sketch to a folder you pick (use a Google Drive / OneDrive / Dropbox folder for a cloud backup).
@@ -22,7 +23,7 @@ The app UI is in Hebrew (RTL).
 ## Install
 - **Android / desktop Chrome or Edge:** open the web app → browser menu → *Install app*.
 - **iPhone:** open in Safari → Share → *Add to Home Screen*.
-- **Desktop app:** download the installer for Windows (`.msi` / `.exe`), macOS (`.dmg`) or Linux (`.AppImage` / `.deb`) from Releases. The builds are not code-signed, so Windows SmartScreen and macOS Gatekeeper will warn on first launch (macOS: right-click the app → *Open*).
+- **Desktop app:** in the app, open *My sketches* (הסקיצות שלי) → *Desktop app* (אפליקציה למחשב). It detects your OS and links the right installer from the latest release. Or download the installer for Windows (`.msi` / `.exe`), macOS (`.dmg`) or Linux (`.AppImage` / `.deb`) from Releases. The builds are not code-signed, so Windows SmartScreen and macOS Gatekeeper will warn on first launch (macOS: right-click the app → *Open*).
 
 ## Where sketches are stored
 - Project documents are stored the same way as sketches (same sync, folder and backup), as entries with `kind: "project"`.
