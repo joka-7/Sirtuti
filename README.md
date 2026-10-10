@@ -7,6 +7,16 @@ The app is available in Hebrew (RTL), English and French, with metric or imperia
 **Web app:** https://joka-7.github.io/Sirtuti/
 **Desktop installers and Android APK:** see [Releases](https://github.com/joka-7/Sirtuti/releases/latest)
 
+## Screenshots
+
+| Sketch with dimensions | Area summary | Shape picker |
+| :-: | :-: | :-: |
+| ![Example pergola sketch with dimensions, areas and perimeters](docs/screenshots/en-sketch.png) | ![Area summary table with the total](docs/screenshots/en-areas.png) | ![Shape picker](docs/screenshots/en-shapes.png) |
+
+| Hebrew (right to left) | French |
+| :-: | :-: |
+| ![The same sketch in Hebrew](docs/screenshots/he-sketch.png) | ![The same sketch in French](docs/screenshots/fr-sketch.png) |
+
 ## Features
 - Ready-made shapes: rectangle, triangle, trapezoid, regular polygon, L-shape, circle, dimension line, and a free polygon defined by side lengths and angles.
 - Hand drawing: point by point or freehand, with automatic straightening. Close the shape at the start point or leave it as an open line.
