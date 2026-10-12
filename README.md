@@ -20,6 +20,9 @@ The app is available in Hebrew (RTL), English and French, with metric or imperia
 ## Features
 - Ready-made shapes: rectangle, triangle, trapezoid, regular polygon, L-shape, circle, dimension line, and a free polygon defined by side lengths and angles.
 - Hand drawing: point by point or freehand, with automatic straightening. Close the shape at the start point or leave it as an open line.
+- Annotations on the sketch: free text (multi-line, resizable) and arrows, both draggable, rotatable and included in exports.
+- Duplicate a sketch (*My sketches* → copy icon) to edit it under a new name without touching the original; export an editable sketch file and re-import it later.
+- Choose whether the date appears in the header of exported PNG/PDF/Word files.
 - Drag, rotate, snap to other shapes' corners, duplicate, undo/redo, bring to front / send to back.
 - Area and perimeter per shape (each can be hidden), an area summary that can be copied as text.
 - Export a sketch to PNG or a one-page A4 PDF with all dimensions and an area table.

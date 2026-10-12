@@ -2,6 +2,15 @@
 // Hebrew is the built-in default; add a language by adding an object here.
 window.SIRTUTI_I18N = {
  "en": {
+  "חץ": "Arrow",
+  "גודל": "Size",
+  "הערות על הסקיצה": "Notes on the sketch",
+  "שכפול סקיצה (שמירה בשם אחר)": "Duplicate sketch (save under another name)",
+  "נוצר עותק. השינויים יישמרו בעותק בלבד, המקור נשאר כמו שהיה": "Copy created. Changes are saved to the copy only; the original stays as it was",
+  "קובץ סקיצה לעריכה": "Editable sketch file",
+  "אפשר לפתוח אותו שוב באפליקציה ולהמשיך לערוך (הסקיצות שלי ← ייבוא מקובץ)": "Open it again in the app and keep editing (My sketches → Import from file)",
+  "הצגת התאריך בכותרת": "Show the date in the header",
+  "קובץ הסקיצה נשמר": "Sketch file saved",
   " (לא נספר)": " (not counted)",
   " (עותק)": " (copy)",
   " <small>(לא נספר)</small>": " <small>(not counted)</small>",
@@ -291,6 +300,15 @@ window.SIRTUTI_I18N = {
   "→ ואז סגירה": "→ then closes"
  },
  "fr": {
+  "חץ": "Flèche",
+  "גודל": "Taille",
+  "הערות על הסקיצה": "Annotations du croquis",
+  "שכפול סקיצה (שמירה בשם אחר)": "Dupliquer le croquis (enregistrer sous un autre nom)",
+  "נוצר עותק. השינויים יישמרו בעותק בלבד, המקור נשאר כמו שהיה": "Copie créée. Les modifications sont enregistrées dans la copie uniquement ; l’original reste intact",
+  "קובץ סקיצה לעריכה": "Fichier de croquis modifiable",
+  "אפשר לפתוח אותו שוב באפליקציה ולהמשיך לערוך (הסקיצות שלי ← ייבוא מקובץ)": "Rouvrez-le dans l’application pour continuer à le modifier (Mes croquis → Importer un fichier)",
+  "הצגת התאריך בכותרת": "Afficher la date dans l’en-tête",
+  "קובץ הסקיצה נשמר": "Fichier de croquis enregistré",
   " (לא נספר)": " (non compté)",
   " (עותק)": " (copie)",
   " <small>(לא נספר)</small>": " <small>(non compté)</small>",
