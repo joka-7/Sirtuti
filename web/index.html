@@ -71,6 +71,7 @@ button{cursor:pointer}
 @media (min-width:640px){.ib.lbl span{display:inline}}
 textarea.tx{width:100%;min-height:64px;resize:vertical;font-size:16px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--board);font-family:var(--font);color:var(--ink)}
 .sk .thumb{width:64px;height:48px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px;flex:none}
+.tour{display:flex;flex-direction:column;gap:10px;min-height:190px}.tour p{margin:0;line-height:1.6;font-size:15px}.tour ul{margin:0;padding-inline-start:20px;line-height:1.7;font-size:14.5px}.tour .big{font-size:34px;line-height:1}.dots{display:flex;gap:6px;justify-content:center;margin:12px 0 0}.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--accent)}
 .picksec{font-size:12.5px;color:var(--ink-2);margin:14px 0 6px}
 .icons{display:flex;gap:2px;flex:none}
 
@@ -1851,6 +1852,28 @@ function exportMenu(opts,date){
   modalEl.querySelectorAll('[data-exp]').forEach(b=>b.onclick=()=>{closeModal();opts[+b.dataset.exp].run();});
 }
 
+/* ---------- welcome tour ---------- */
+const TOUR_K='sirtuti.tour';
+function tourSteps(){return [
+ {i:'📐',t:tt("ברוכים הבאים לשרטוטי"),b:`<p>${tt("סקיצות עם מידות לביקורי שטח: מציירים חדרים וחלקות, מזינים מידות, ומקבלים שטח והיקף לכל צורה וסה״כ להצעת מחיר. זו הערכה מהירה, לא מדידה מדויקת.")}</p><p>${tt("המדריך הקצר הזה עובר על כל מה שאפשר לעשות. אפשר לפתוח אותו שוב מההגדרות.")}</p>`},
+ {i:'▭',t:tt("הוספת צורות"),b:`<ul><li>${tt("„הוספת צורה\": מלבן, משולש, טרפז, מצולע, חדר L, עיגול, קו מידה ומצולע חופשי.")}</li><li>${tt("מזינים מידות בחלונית, גוררים למקום ומסובבים בידית העגולה.")}</li><li>${tt("„הצמדה לפינות\" (המגנט) מיישרת פינות של צורות זו לזו.")}</li><li>${tt("שכפול, הבאה לחזית, ביטול ושחזור זמינים תמיד.")}</li></ul>`},
+ {i:'✏️',t:tt("שרטוט ידני"),b:`<ul><li>${tt("„שרטוט ידני\": נקודה אחר נקודה או ביד חופשית, והקווים מתיישרים אוטומטית.")}</li><li>${tt("סוגרים את הצורה בנקודת ההתחלה, או משאירים קו פתוח (קיר, גדר, צנרת).")}</li><li>${tt("אחר כך אפשר לתקן את אורך כל צלע ואת הזוויות בחלונית.")}</li></ul>`},
+ {i:'💬',t:tt("טקסט וחצים"),b:`<p>${tt("ב„הוספת צורה\" ← „הערות על הסקיצה\" אפשר להוסיף טקסט חופשי (כמה שורות, בכל גודל וצבע) וחצים. גוררים, מסובבים ומשכפלים אותם כמו כל צורה. הם מופיעים בייצוא ולא נספרים בשטח.")}</p>`},
+ {i:'∑',t:tt("שטחים וסה״כ"),b:`<ul><li>${tt("הלחצן למעלה מציג את סה״כ השטח. לחיצה עליו פותחת טבלה שאפשר להעתיק כטקסט.")}</li><li>${tt("לכל צורה אפשר להסתיר מידות, שטח או היקף, ולבחור אם היא נכללת בסה״כ.")}</li><li>${tt("ב„הגדרות\" בוחרים מטרי או רגל ואינץ׳. המידות נשמרות במדויק ורק התצוגה משתנה.")}</li></ul>`},
+ {i:'📁',t:tt("שמירה והסקיצות שלי"),b:`<ul><li>${tt("הכול נשמר אוטומטית. כל הסקיצות נמצאות ב„הסקיצות שלי\".")}</li><li>${tt("משם פותחים, מוחקים ומשכפלים סקיצה (שמירה בשם אחר), ומגבים או מייבאים קובץ.")}</li><li>${tt("אפשר להתחבר לחשבון Google כדי לסנכרן בין מכשירים, ובאפליקציה למחשב לשמור אוטומטית לתיקייה.")}</li></ul>`},
+ {i:'📤',t:tt("ייצוא ומסמכי פרויקט"),b:`<ul><li>${tt("כפתור ההורדה: תמונה, PDF, או קובץ סקיצה שאפשר לפתוח ולערוך שוב. אפשר לבחור אם התאריך יופיע בכותרת.")}</li><li>${tt("„מסמכי פרויקט\" (בחלון „הסקיצות שלי\"): סיכום ביקור עם לקוח, כתובת, טקסט, משימות וסקיצות, וטבלת שטחים אוטומטית. מייצאים ל-Word או PDF.")}</li></ul>`}
+];}
+function showTour(i=0){
+  const st=tourSteps(),n=st.length,x=st[i],last=i===n-1;
+  modal(`<h2>${x.t}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2><div class="tour"><div class="big">${x.i}</div>${x.b}</div>
+    <div class="dots">${st.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div>
+    <div class="btnrow" style="justify-content:space-between"><button class="chip" id="tourPrev" ${i?'':'disabled'}>${tt("הקודם")}</button><button class="primary" id="tourNext">${last?tt("מתחילים!"):tt("הבא")}</button></div>`);
+  try{localStorage.setItem(TOUR_K,'1');}catch(e){}
+  $('#tourPrev').onclick=()=>showTour(i-1);
+  $('#tourNext').onclick=()=>last?closeModal():showTour(i+1);
+}
+function maybeTour(){ let seen=true; try{seen=!!localStorage.getItem(TOUR_K);}catch(e){} if(!seen&&!Object.keys(local.all()).length&&!doc) showTour(0); }
+
 /* ---------- settings ---------- */
 function showSettings(){
   modal(`<h2>${tt('הגדרות')}<button class="ib" data-close aria-label="${esc(tt('סגירה'))}">${ic('x')}</button></h2>
@@ -1859,7 +1882,9 @@ function showSettings(){
     <div class="setg"><b>${tt('יחידות מידה')}</b><div class="tabs">
       <button data-units="m" class="${!IMP?'on':''}">${tt('מטרי')}<small>${tt('מ׳')} · ${tt('מ״ר')}</small></button>
       <button data-units="ft" class="${IMP?'on':''}">${tt('אמריקאי')}<small>ft · in · ft²</small></button></div>
-      <div class="hint">${tt('המידות נשמרות תמיד במדויק, ושינוי היחידות משנה רק את התצוגה וההזנה. ביחידות אמריקאיות מקלידים למשל 12\' 6" או 12.5.')}</div></div>`);
+      <div class="hint">${tt('המידות נשמרות תמיד במדויק, ושינוי היחידות משנה רק את התצוגה וההזנה. ביחידות אמריקאיות מקלידים למשל 12\' 6" או 12.5.')}</div></div>
+    <div class="btnrow"><button class="chip" id="tourBtn">${tt('מדריך למשתמש חדש')}</button></div>`);
+  $('#tourBtn').onclick=()=>showTour(0);
   const apply=async(k,v)=>{ try{localStorage.setItem(k,v);}catch(e){} await flushSketch(); if(doc&&docSaveT) await saveDocNow(); location.reload(); };
   modalEl.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{ if(b.dataset.lang!==LANG) apply('sirtuti.lang',b.dataset.lang); });
   modalEl.querySelectorAll('[data-units]').forEach(b=>b.onclick=()=>{ if(b.dataset.units!==UNITS) apply('sirtuti.units',b.dataset.units); });
@@ -1879,6 +1904,7 @@ store.initClaude().then(async()=>{
   else if(!sk.example) setStatus(savedText());
   const v=getView(),pv=v&&all.find(x=>x.id===v&&isProj(x)); if(pv) openDoc(pv);
   cloud.init();
+  maybeTour();
 });
 })();
 </script>
