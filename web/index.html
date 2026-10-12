@@ -66,6 +66,13 @@ button{cursor:pointer}
 .acct span{color:var(--ink-2);font-size:13.5px;text-align:start}
 .ib:disabled{opacity:.35;cursor:default}
 .ib svg{width:20px;height:20px}
+.ib.lbl{width:auto;padding-inline:8px;gap:5px;grid-auto-flow:column;font-size:13.5px}
+.ib.lbl span{display:none}
+@media (min-width:640px){.ib.lbl span{display:inline}}
+textarea.tx{width:100%;min-height:64px;resize:vertical;font-size:16px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--board);font-family:var(--font);color:var(--ink)}
+.sk .thumb{width:64px;height:48px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:6px;flex:none}
+.tour{display:flex;flex-direction:column;gap:10px;min-height:190px}.tour p{margin:0;line-height:1.6;font-size:15px}.tour ul{margin:0;padding-inline-start:20px;line-height:1.7;font-size:14.5px}.tour .big{font-size:34px;line-height:1}.dots{display:flex;gap:6px;justify-content:center;margin:12px 0 0}.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--accent)}
+.picksec{font-size:12.5px;color:var(--ink-2);margin:14px 0 6px}
 .icons{display:flex;gap:2px;flex:none}
 
 /* main */
@@ -76,6 +83,7 @@ button{cursor:pointer}
 .g-min{stroke:var(--grid);stroke-width:1}
 .g-maj{stroke:var(--grid-major);stroke-width:1}
 .el{fill:var(--ink);stroke:var(--board);paint-order:stroke;stroke-linejoin:round;font-variant-numeric:tabular-nums;font-weight:500}
+.tn{stroke:var(--board);paint-order:stroke;stroke-linejoin:round;font-weight:500}
 .cn{fill:var(--ink);stroke:var(--board);paint-order:stroke;font-weight:700}
 .ca{fill:var(--accent);stroke:var(--board);paint-order:stroke;font-weight:700;font-variant-numeric:tabular-nums}
 .cp{fill:var(--ink-2);stroke:var(--board);paint-order:stroke;font-variant-numeric:tabular-nums}
@@ -275,7 +283,7 @@ a.chip{color:var(--ink);text-decoration:none}
       <button class="ib" id="undoBtn" title="ביטול" aria-label="ביטול"></button>
       <button class="ib" id="redoBtn" title="שחזור" aria-label="שחזור"></button>
       <button class="ib" id="acctBtn" hidden aria-label="חשבון Google"></button>
-      <button class="ib" id="listBtn" title="הסקיצות שלי" aria-label="הסקיצות שלי"></button>
+      <button class="ib lbl" id="listBtn" title="הסקיצות שלי" aria-label="הסקיצות שלי"></button>
       <button class="ib" id="expBtn" title="שמירה כתמונה" aria-label="שמירה כתמונה"></button>
     </div>
   </header>
@@ -363,18 +371,20 @@ const ICON={
  right:'<path d="m9 18 6-6-6-6"/>',
  left:'<path d="m15 18-6-6 6-6"/>',
  pen:'<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+ arrow:'<path d="M5 19 19 5"/><path d="M9 5h10v10"/>',
+ type:'<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
  up:'<path d="m18 15-6-6-6 6"/>', down:'<path d="m6 9 6 6 6-6"/>'
 };
 const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[n]}</svg>`;
-$('#undoBtn').innerHTML=ic('undo');$('#acctBtn').innerHTML=ic('user');$('#redoBtn').innerHTML=ic('redo');$('#listBtn').innerHTML=ic('folder');$('#expBtn').innerHTML=ic('dl');
+$('#undoBtn').innerHTML=ic('undo');$('#acctBtn').innerHTML=ic('user');$('#redoBtn').innerHTML=ic('redo');$('#listBtn').innerHTML=ic('folder')+'<span>'+tt("הסקיצות שלי")+'</span>';$('#expBtn').innerHTML=ic('dl');
 $('#magBtn').innerHTML=ic('mag');$('#zinBtn').innerHTML=ic('plus');$('#zoutBtn').innerHTML=ic('minus');$('#fitBtn').innerHTML=ic('fit');
 $('#addBtn').innerHTML=ic('plus')+tt("<span>הוספת צורה</span>");
 $('#drawBtn').innerHTML=ic('pen')+tt("<span>שרטוט ידני</span>");
 $('#docBack').innerHTML=ic(RTL?'right':'left');$('#docList').innerHTML=ic('folder');$('#docWord').innerHTML=ic('dl')+'<span>'+tt("ייצוא")+'</span>';$('#docWord').title=tt("ייצוא");
 
 const PALETTE=['#2f6fb0','#1f8a7a','#c27c12','#b5485d','#6b5bb5','#4f6272'];
-const KIND_LABEL={rect:tt("מלבן / ריבוע"),tri:tt("משולש"),trap:tt("טרפז"),reg:tt("מצולע משוכלל"),L:tt("צורת L"),free:tt("מצולע חופשי"),circle:tt("עיגול"),line:tt("קו מידה")};
-const SHORT={rect:tt("מלבן"),tri:tt("משולש"),trap:tt("טרפז"),reg:tt("מצולע"),L:tt("חדר L"),free:tt("מצולע"),circle:tt("עיגול"),line:tt("קו")};
+const KIND_LABEL={rect:tt("מלבן / ריבוע"),tri:tt("משולש"),trap:tt("טרפז"),reg:tt("מצולע משוכלל"),L:tt("צורת L"),free:tt("מצולע חופשי"),circle:tt("עיגול"),line:tt("קו מידה"),arrow:tt("חץ"),text:tt("טקסט")};
+const SHORT={rect:tt("מלבן"),tri:tt("משולש"),trap:tt("טרפז"),reg:tt("מצולע"),L:tt("חדר L"),free:tt("מצולע"),circle:tt("עיגול"),line:tt("קו"),arrow:tt("חץ"),text:tt("טקסט")};
 const FIELDS={
  rect:[['w',tt("רוחב")],['h',tt("אורך")]],
  tri:[['a',tt("צלע א (בסיס)")],['b',tt("צלע ב")],['c',tt("צלע ג")]],
@@ -383,15 +393,17 @@ const FIELDS={
  L:[['w',tt("רוחב כולל")],['h',tt("אורך כולל")],['cw',tt("רוחב החיתוך")],['ch',tt("אורך החיתוך")]],
  circle:[['r',tt("רדיוס")]],
  line:[['len',tt("אורך")]],
+ arrow:[['len',tt("אורך")]],
+ text:[],
  free:[]
 };
 const DEF={rect:{w:4,h:3},tri:{a:4,b:3,c:5},trap:{a:5,b:3,h:2.5,o:1},reg:{n:5,s:2},L:{w:6,h:5,cw:2.5,ch:2},
- free:{segs:[{len:5,ang:90},{len:3,ang:90},{len:2,ang:270},{len:1.5,ang:90}]},circle:{r:1.5},line:{len:3}};
+ free:{segs:[{len:5,ang:90},{len:3,ang:90},{len:2,ang:270},{len:1.5,ang:90}]},circle:{r:1.5},line:{len:3},arrow:{len:2},text:{size:0.4}};
 const PICK_ICON={
  rect:'<rect x="6" y="6" width="28" height="18"/>',tri:'<polygon points="6,25 34,25 14,5"/>',
  trap:'<polygon points="4,25 36,25 28,6 12,6"/>',reg:'<polygon points="20,3 35,14 29,27 11,27 5,14"/>',
  L:'<polygon points="6,4 20,4 20,14 34,14 34,27 6,27"/>',free:'<polygon points="5,24 12,6 26,4 35,16 24,27"/>',
- circle:'<circle cx="20" cy="15" r="11"/>',line:'<path d="M5 15H35M5 9V21M35 9V21" fill="none"/>'
+ circle:'<circle cx="20" cy="15" r="11"/>',arrow:'<path d="M6 24 30 7M20 6h11v11" fill="none"/>',text:'<path d="M9 6h22M20 6v19M15 25h10" fill="none"/>',line:'<path d="M5 15H35M5 9V21M35 9V21" fill="none"/>'
 };
 
 const fmt=v=>(Math.round(v*100)/100).toFixed(2);
@@ -436,6 +448,11 @@ const LOCALE=LANG==='he'?'he-IL':LANG==='fr'?'fr-FR':'en-US';
 const dateStr=t=>new Date(t).toLocaleDateString(LOCALE,{day:'numeric',month:'numeric',year:'2-digit'});
 
 /* ---------- geometry ---------- */
+let TM=null;
+function textW(l,sz){ // width of a text line in the same units as sz
+  try{ if(!TM) TM=document.createElement('canvas').getContext('2d'); TM.font='500 100px Rubik,Arial,"Noto Sans Hebrew",sans-serif'; return TM.measureText(l).width/100*sz; }
+  catch(e){ return l.length*sz*.6; }
+}
 function localGeom(s){
   const p=s.p; let pts=[],closed=true,err='',circle=null,closeLen=null;
   switch(s.kind){
@@ -457,7 +474,9 @@ function localGeom(s){
         if(pts.length<3) err=tt("צריך לפחות שתי צלעות."); }
       break; }
     case 'circle': circle=p.r; pts=[[-p.r,-p.r],[p.r,-p.r],[p.r,p.r],[-p.r,p.r]]; break;
-    case 'line': pts=[[0,0],[p.len,0]]; closed=false; break;
+    case 'line': case 'arrow': pts=[[0,0],[p.len,0]]; closed=false; break;
+    case 'text': { const ls=String(s.name||' ').split('\n'),sz=p.size||0.4; let mw=0; ls.forEach(l=>{mw=Math.max(mw,textW(l,sz));});
+      const hw=Math.max(mw,sz*.8)/2+sz*.3,hh=ls.length*sz*1.25/2+sz*.2; pts=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]]; closed=false; break; }
   }
   if(s.flip&&!circle) pts=pts.map(([x,y])=>[-x,y]);
   let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
@@ -491,8 +510,20 @@ function shapeSVG(s,T,o){
   const id=o.exp?'':` data-id="${s.id}"`;
   const hs=Math.max(3,fs*.3);
   let body='',lab='';
+  if(s.kind==='text'){
+    const sz=(s.p.size||0.4)*T.k,ls=String(s.name||'').split('\n'),lh=1.25,hx=C[0].toFixed(1);
+    if(!o.exp) body=`<polygon${id} points="${P.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="transparent"/>`;
+    let y=C[1]-ls.length*sz*lh/2;
+    ls.forEach(l=>{y+=sz*lh/2; if(l) lab+=`<text class="tn" x="${hx}" y="${y.toFixed(1)}" transform="rotate(${s.rot} ${hx} ${C[1].toFixed(1)})" font-size="${sz.toFixed(1)}" fill="${col}" text-anchor="middle" dominant-baseline="central" direction="${RTL?'rtl':'ltr'}" stroke-width="${Math.max(3,sz*.25).toFixed(1)}">${esc(l)}</text>`; y+=sz*lh/2;});
+    return {body,lab};
+  }
   if(g.circle){
     body=`<circle${id} cx="${C[0]}" cy="${C[1]}" r="${g.circle*T.k}" fill="${col}" fill-opacity="0.16" stroke="${col}" stroke-width="2"/>`;
+  }else if(s.kind==='arrow'){
+    const a=P[0],b=P[1],dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,hl=Math.min(L*.6,Math.max(12,fs*1.1+6)),hw=hl*.45,bx=b[0]-ux*hl,by=b[1]-uy*hl;
+    body=`<g${id}><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="transparent" stroke-width="22"/>`+
+      `<line x1="${a[0]}" y1="${a[1]}" x2="${bx}" y2="${by}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>`+
+      `<polygon points="${b[0]},${b[1]} ${bx-uy*hw},${by+ux*hw} ${bx+uy*hw},${by-ux*hw}" fill="${col}" stroke="${col}" stroke-width="1.5" stroke-linejoin="round"/></g>`;
   }else if(g.closed){
     body=`<polygon${id} points="${P.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="${col}" fill-opacity="0.16" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>`;
   }else{
@@ -505,7 +536,7 @@ function shapeSVG(s,T,o){
       tick(P[0],P[1])+tick(P[n-1],P[n-2])+`</g>`;
   }
   // side lengths
-  if(s.labels!==false&&!g.circle){
+  if(s.labels!==false&&!g.circle&&s.kind!=='text'){
     const n=g.closed?P.length:P.length-1,A=sarea(P);
     for(let i=0;i<n;i++){
       const a=P[i],b=P[(i+1)%P.length],dx=b[0]-a[0],dy=b[1]-a[1],sl=Math.hypot(dx,dy);
@@ -548,12 +579,12 @@ function selSVG(s,T){
   const g=geom(s),P=g.w.map(([x,y])=>[x*T.k+T.ox,y*T.k+T.oy]),C=[s.x*T.k+T.ox,s.y*T.k+T.oy];
   let o='';
   if(g.circle) o+=`<circle class="sel" cx="${C[0]}" cy="${C[1]}" r="${g.circle*T.k+5}"/>`;
-  else if(g.closed) o+=`<polygon class="sel" points="${P.map(p=>p.join(',')).join(' ')}"/>`;
+  else if(g.closed||s.kind==='text') o+=`<polygon class="sel" points="${P.map(p=>p.join(',')).join(' ')}"/>`;
   if(focusSide!=null&&s.kind==='free'&&!g.circle){
     const i=focusSide,a=P[i],b=g.closed?P[(i+1)%P.length]:P[i+1];
     if(a&&b) o+=`<line class="hl" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`;
   }
-  if(!g.circle) P.forEach(p=>o+=`<circle class="vdot" cx="${p[0]}" cy="${p[1]}" r="4"/>`);
+  if(!g.circle&&s.kind!=='text') P.forEach(p=>o+=`<circle class="vdot" cx="${p[0]}" cy="${p[1]}" r="4"/>`);
   if(!g.circle){
     const r=s.rot*Math.PI/180,ux=Math.sin(r),uy=-Math.cos(r),d0=g.hh*T.k,d1=d0+34;
     const hx=C[0]+ux*d1,hy=C[1]+uy*d1;
@@ -575,7 +606,8 @@ function gridSVG(T,W,H){
 
 /* ---------- state ---------- */
 let sk=null,sel=null,view={k:40,ox:0,oy:0},magnet=true,W=0,H=0,focusSide=null,draw=null,drawMode='pts';
-const isOpen=s=>s.kind==='line'||(s.kind==='free'&&!!s.p.open);
+const NOTE=k=>k==='arrow'||k==='text';   // annotations: never counted in areas
+const isOpen=s=>s.kind==='line'||NOTE(s.kind)||(s.kind==='free'&&!!s.p.open);
 let undoS=[],redoS=[],lastJSON='';
 const svg=$('#board'),sheet=$('#sheet'),mainEl=$('#main');
 const cur=()=>sk.shapes.find(s=>s.id===sel)||null;
@@ -589,7 +621,7 @@ function sampleSketch(){
   ]};
 }
 function newSketch(){
-  return {id:'s'+uid(),name:tt("סקיצה ")+dateStr(Date.now()),updated:Date.now(),shapes:[]};
+  return {id:'s'+uid(),name:tt("סקיצה חדשה"),updated:Date.now(),shapes:[]};
 }
 
 /* ---------- storage ---------- */
@@ -606,7 +638,7 @@ const local={
   put(s){const o=this.read();o.sketches=o.sketches||{};o.sketches[s.id]=s;this.write(o);},
   del(id){const o=this.read();if(o.sketches&&o.sketches[id]){delete o.sketches[id];this.write(o);}}
 };
-const plain=s=>clone({name:s.name||'',updated:s.updated||Date.now(),shapes:s.shapes||[],...(s.kind==='project'?{kind:'project',meta:s.meta||{},blocks:s.blocks||[]}:{})});
+const plain=s=>clone({name:s.name||'',updated:s.updated||Date.now(),shapes:s.shapes||[],...(s.showDate===false?{showDate:false}:{}),...(s.kind==='project'?{kind:'project',meta:s.meta||{},blocks:s.blocks||[]}:{})});
 const isProj=x=>!!x&&x.kind==='project';
 /* ---------- auto-save folder (desktop app) ---------- */
 // Every sketch is mirrored to <folder>/<name> (<id>).sirtuti.json on each change. Picking a folder that
@@ -860,7 +892,7 @@ function openPanel(){
   if(!s){ if(!sheet.hidden){sheet.hidden=true;mainEl.classList.remove('has-panel');} $('#addGroup').hidden=!!draw; return; }
   sheet.hidden=false; mainEl.classList.add('has-panel'); $('#addGroup').hidden=!!draw||isMobile();
   let h=`<div class="grab"></div><div class="kind">${KIND_LABEL[s.kind]}</div>
-  <div class="shead"><input id="f-name" placeholder="${esc(tt("שם (למשל: סלון)"))}" value="${esc(s.name)}" aria-label="${esc(tt("שם הצורה"))}"><button class="ib" data-act="close" aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></div>`;
+  <div class="shead">${s.kind==='text'?`<textarea class="tx" id="f-name" rows="2" placeholder="${esc(tt("טקסט"))}" aria-label="${esc(tt("טקסט"))}">${esc(s.name)}</textarea>`:`<input id="f-name" placeholder="${esc(tt("שם (למשל: סלון)"))}" value="${esc(s.name)}" aria-label="${esc(tt("שם הצורה"))}">`}<button class="ib" data-act="close" aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></div>`;
   if(s.kind==='free'){
     const op=!!s.p.open,minS=op?1:2;
     h+=`<div class="row" style="margin:0 0 10px"><label class="tg"><input type="checkbox" id="t-closed" ${op?'':'checked'}>${tt("צורה סגורה (חוזרת לנקודת ההתחלה)")}</label></div>`;
@@ -875,16 +907,17 @@ function openPanel(){
     <div class="hint">${op?tt("קו פתוח: מתחיל ונגמר איפה שתחליט (קיר, גדר, צנרת). "):''}${tt("כשמקלידים באחת השורות, הצלע שלה מסומנת בשרטוט. הזווית היא הפנימית בפינה שאחרי הצלע: 90° לפינה רגילה, 270° לפינה פנימית")}${op?'.':tt(", והצלע האחרונה נסגרת לבד לנקודת ההתחלה.")}</div>`;
   }else{
     h+=`<div class="fields">`+FIELDS[s.kind].map(([f,l])=>fieldHTML(f,l,f==='n'?s.p[f]:dispLen(s.p[f]),f==='n'||IMP?'':tt("מ׳"),f!=='n'&&IMP)).join('')+`</div>`;
+    if(s.kind==='text') h+=`<div class="row"><span class="lbl">${tt("גודל")}</span><button class="chip" data-act="ts-" aria-label="${esc(tt("הקטנה"))}">A−</button><button class="chip" data-act="ts+" aria-label="${esc(tt("הגדלה"))}">A+</button></div>`;
     if(s.kind==='trap') h+=`<div class="row"><button class="chip" data-act="sym">${tt("טרפז שווה שוקיים")}</button></div>`;
   }
   h+=`<div class="err" id="p-err" hidden></div>`;
-  if(isOpen(s)){ if(s.kind!=='line') h+=`<div class="info"><div><small>${tt("אורך כולל")}</small><b id="p-per"></b></div></div>`; }
+  if(isOpen(s)){ if(s.kind==='free') h+=`<div class="info"><div><small>${tt("אורך כולל")}</small><b id="p-per"></b></div></div>`; }
   else h+=`<div class="info"><div><small>${tt("שטח")}</small><b id="p-area"></b></div><div><small>${tt("היקף")}</small><b id="p-per"></b></div></div>`;
   if(s.kind!=='circle') h+=`<div class="row rot"><span class="lbl">${tt("סיבוב")}</span><span class="inp"><input id="f-rot" data-f="rot" inputmode="decimal" dir="ltr" value="${s.rot}"><em>°</em></span>
     <button class="chip" data-act="r-15" aria-label="${esc(tt("סיבוב נגד כיוון השעון"))}">${ic('ccw')}15°</button><button class="chip" data-act="r+15" aria-label="${esc(tt("סיבוב עם כיוון השעון"))}">${ic('cw')}15°</button><button class="chip" data-act="r90">90°</button></div>`;
   h+=`<div class="row"><span class="lbl">${tt("צבע")}</span>`+PALETTE.map(c=>`<button class="sw${c===s.color?' on':''}" data-color="${c}" style="background:${c}" aria-label="${esc(tt("צבע"))}"></button>`).join('')+`</div>`;
   h+=`<div class="row" style="gap:14px">`;
-  if(s.kind!=='circle') h+=`<label class="tg"><input type="checkbox" id="t-labels" data-t="labels" ${s.labels!==false?'checked':''}>${tt("מידות צלעות")}</label>`;
+  if(s.kind!=='circle'&&s.kind!=='text') h+=`<label class="tg"><input type="checkbox" id="t-labels" data-t="labels" ${s.labels!==false?'checked':''}>${tt("מידות צלעות")}</label>`;
   if(!isOpen(s)) h+=`<label class="tg"><input type="checkbox" id="t-area" data-t="showArea" ${s.showArea!==false?'checked':''}>${tt("שטח בשרטוט")}</label><label class="tg"><input type="checkbox" id="t-per" data-t="showPer" ${s.showPer!==false?'checked':''}>${tt("היקף בשרטוט")}</label><label class="tg"><input type="checkbox" id="t-inc" data-t="include" ${s.include!==false?'checked':''}>${tt("כלול בסה״כ")}</label>`;
   if(['tri','trap','L','free'].includes(s.kind)) h+=`<label class="tg"><input type="checkbox" id="t-flip" data-t="flip" ${s.flip?'checked':''}>${tt("היפוך (מראה)")}</label>`;
   h+=`</div><div class="row"><button class="chip" data-act="dup">${ic('copy')} ${tt("שכפול")}</button><button class="chip" data-act="front">${ic('up')} ${tt("הבא לחזית")}</button><button class="chip" data-act="back">${ic('down')} ${tt("שלח לרקע")}</button><button class="chip danger" data-act="del">${ic('trash')} ${tt("מחיקה")}</button></div>`;
@@ -937,6 +970,7 @@ sheet.addEventListener('click',e=>{
     case 'close': select(null); return;
     case 'r-15': case 'r+15': case 'r90':
       s.rot=normRot(s.rot+(a==='r-15'?-15:a==='r+15'?15:90)); $('#f-rot').value=s.rot; break;
+    case 'ts-': case 'ts+': s.p.size=Math.max(0.05,Math.min(8,Math.round(s.p.size*(a==='ts+'?1.2:1/1.2)*1000)/1000)); break;
     case 'sym': s.p.o=Math.round((s.p.a-s.p.b)/2*1000)/1000; $('#f-o').value=dispLen(s.p.o); break;
     case 'segadd': s.p.segs.push({len:niceDef(2),ang:90}); render(); commit(); openPanel(); return;
     case 'segdel': if(s.p.segs.length>(s.p.open?1:2)){s.p.segs.splice(+b.dataset.i,1);} render(); commit(); openPanel(); return;
@@ -1078,12 +1112,14 @@ $('#dCancel').onclick=endDraw;
 /* ---------- adding ---------- */
 function showPicker(){
   modal(`<h2>${tt("איזו צורה להוסיף?")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2><div class="picks">`+
-    Object.keys(KIND_LABEL).map(k=>`<button class="pick" data-kind="${k}"><svg viewBox="0 0 40 30">${PICK_ICON[k]}</svg>${KIND_LABEL[k]}</button>`).join('')+
+    Object.keys(KIND_LABEL).filter(k=>!NOTE(k)).map(k=>`<button class="pick" data-kind="${k}"><svg viewBox="0 0 40 30">${PICK_ICON[k]}</svg>${KIND_LABEL[k]}</button>`).join('')+
+    `</div><div class="picksec">${tt("הערות על הסקיצה")}</div><div class="picks">`+
+    Object.keys(KIND_LABEL).filter(NOTE).map(k=>`<button class="pick" data-kind="${k}"><svg viewBox="0 0 40 30">${PICK_ICON[k]}</svg>${KIND_LABEL[k]}</button>`).join('')+
     `</div><div class="hint" style="margin-top:12px">${tt("הצורה תופיע במרכז הלוח. אחר כך מזינים מידות, גוררים למקום ומסובבים בידית העגולה.")}</div>`);
 }
 function defParams(kind){
   const p=clone(DEF[kind]); if(!IMP) return p;
-  Object.keys(p).forEach(k=>{if(k!=='n'&&typeof p[k]==='number') p[k]=niceDef(p[k]);});
+  Object.keys(p).forEach(k=>{if(k!=='n'&&k!=='size'&&typeof p[k]==='number') p[k]=niceDef(p[k]);});
   if(p.segs) p.segs.forEach(g=>g.len=niceDef(g.len));
   return p;
 }
@@ -1093,19 +1129,20 @@ function addShape(kind){
   const sy=isMobile()?H*0.26:H/2;
   const wx=(W/2-view.ox)/view.k, wy=(sy-view.oy)/view.k;
   const n=sk.shapes.filter(s=>s.kind===kind).length+1;
-  const s={id:uid(),kind,name:kind==='line'?'':SHORT[kind]+' '+n,p:defParams(kind),
-    x:Math.round(wx*10)/10,y:Math.round(wy*10)/10,rot:0,color:PALETTE[sk.shapes.length%PALETTE.length]};
+  const s={id:uid(),kind,name:kind==='line'||kind==='arrow'?'':kind==='text'?tt("טקסט"):SHORT[kind]+' '+n,p:defParams(kind),
+    x:Math.round(wx*10)/10,y:Math.round(wy*10)/10,rot:0,color:NOTE(kind)?PALETTE[3]:PALETTE[sk.shapes.length%PALETTE.length]};
+  if(kind==='arrow') s.labels=false;
   sk.shapes.push(s); commit(); select(s.id);
   // make sure the new shape fits on screen
   const g=geom(s); const sz=Math.max(g.hw,g.hh)*2*view.k; const avail=isMobile()?H*0.4:Math.min(W,H)*0.6;
-  if(sz>avail||sz<30){ const k=Math.max(4,Math.min(400,avail/(Math.max(g.hw,g.hh)*2))); view.k=k; view.ox=W/2-s.x*k; view.oy=sy-s.y*k; render(); }
-  setTimeout(()=>{const f=sheet.querySelector('[data-f],[data-seg]'); if(f&&!isMobile()) f.focus();},50);
+  if(kind!=='text'&&(sz>avail||sz<30)){ const k=Math.max(4,Math.min(400,avail/(Math.max(g.hw,g.hh)*2))); view.k=k; view.ox=W/2-s.x*k; view.oy=sy-s.y*k; render(); }
+  setTimeout(()=>{const f=kind==='text'?$('#f-name'):sheet.querySelector('[data-f],[data-seg]'); if(f&&(kind==='text'||!isMobile())){f.focus();if(kind==='text')f.select();}},50);
 }
 
 /* ---------- pointer interaction ---------- */
 const ptrs=new Map(); let act=null;
 function spt(e){const r=svg.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
-function snapPts(s){const g=geom(s);return g.circle?[[s.x-g.circle,s.y],[s.x+g.circle,s.y],[s.x,s.y-g.circle],[s.x,s.y+g.circle]]:g.w;}
+function snapPts(s){if(s.kind==='text')return [];const g=geom(s);return g.circle?[[s.x-g.circle,s.y],[s.x+g.circle,s.y],[s.x,s.y-g.circle],[s.x,s.y+g.circle]]:g.w;}
 svg.addEventListener('pointerdown',e=>{
   try{svg.setPointerCapture(e.pointerId);}catch(_){}
   const p=spt(e); ptrs.set(e.pointerId,p);
@@ -1233,12 +1270,14 @@ $('#totalBtn').onclick=()=>{
 /* ---------- sketches list ---------- */
 async function showList(){
   modal(`<h2>${tt("הסקיצות שלי")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>${listTabs('sk')}<div class="hint">${tt("טוען…")}</div>`);
+  await flushSketch();
   const all=await store.list(),list=all.filter(x=>!isProj(x));
   if(sk.example&&!list.find(x=>x.id===sk.id)) list.unshift(sk);
   const area=s=>s.shapes.filter(x=>!isOpen(x)&&x.include!==false).reduce((t,x)=>t+measures(x,geom(x)).area,0);
   modal(`<h2>${tt("הסקיצות שלי")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>${listTabs('sk')}
-   <div class="sklist">`+list.map(s=>`<div class="sk${s.id===sk.id?' cur':''}"><div class="meta"><b>${esc(s.name||tt("ללא שם"))}</b><small>${dateStr(s.updated||Date.now())} · ${s.shapes.length} ${tt("צורות ·")} ${fAU(area(s))}</small></div>
+   <div class="sklist">`+list.map(s=>`<div class="sk${s.id===sk.id?' cur':''}">${s.shapes.length?`<img class="thumb" alt="" src="${previewSrc(s)}">`:''}<div class="meta"><b>${esc(s.name||tt("ללא שם"))}</b><small>${dateStr(s.updated||Date.now())} · ${s.shapes.length} ${tt("צורות ·")} ${fAU(area(s))}</small></div>
      ${s.id===sk.id?tt("<small style=\"color:var(--accent)\">פתוחה</small>"):`<button class="chip" data-open="${s.id}">${tt("פתיחה")}</button>`}
+     <button class="chip" data-dupsk="${s.id}" title="${esc(tt("שכפול סקיצה (שמירה בשם אחר)"))}" aria-label="${esc(tt("שכפול סקיצה (שמירה בשם אחר)"))}">${ic('copy')}</button>
      <button class="chip danger" data-delsk="${s.id}" aria-label="${esc(tt("מחיקת סקיצה"))}">${ic('trash')}</button></div>`).join('')+`</div>
    ${folder.supported()?`<div class="fold"><b>${tt("שמירה אוטומטית לתיקייה")}</b>${folder.path?`<span dir="ltr" class="fpath">${esc(folder.path)}</span><div class="btnrow" style="margin-top:6px"><button class="chip" id="fdPick">${tt("החלפת תיקייה")}</button><button class="chip" id="fdStop">${tt("הפסקה")}</button></div>`:`<span>${tt("כל סקיצה תישמר גם כקובץ בתיקייה שתבחר, ותתעדכן בכל שינוי. בחר תיקייה של Google Drive, OneDrive או Dropbox כדי לקבל גיבוי בענן.")}</span><div class="btnrow" style="margin-top:6px"><button class="primary" id="fdPick">${tt("בחירת תיקייה")}</button></div>`}</div>`:''}
    <div class="btnrow"><button class="primary" id="newSk">${tt("סקיצה חדשה")}</button><button class="chip" id="bkOut">${ic('dl')} ${tt("גיבוי לקובץ")}</button><button class="chip" id="bkIn">${tt("ייבוא מקובץ")}</button><button class="chip" id="setBtn">${ic('gear')} ${tt("הגדרות")}</button><button class="chip" id="dlApp">${ic('monitor')} ${IS_TAURI?tt("עדכונים"):tt("הורדת האפליקציה")}</button><input type="file" id="bkFile" accept=".json,application/json" hidden></div>
@@ -1252,6 +1291,14 @@ async function showList(){
   $('#bkFile').onchange=e=>{const f=e.target.files&&e.target.files[0]; if(f) backupIn(f);};
   $('#newSk').onclick=async()=>{ await closeDoc(); docReturn=null; $('#backDoc').hidden=true; openSketch(newSketch()); closeModal(); scheduleSave(); };
   modalEl.querySelectorAll('[data-open]').forEach(b=>b.onclick=async()=>{const s=list.find(x=>x.id===b.dataset.open); await closeDoc(); docReturn=null; $('#backDoc').hidden=true; openSketch(JSON.parse(JSON.stringify(s))); closeModal();});
+  modalEl.querySelectorAll('[data-dupsk]').forEach(b=>b.onclick=async()=>{
+    const src=list.find(x=>x.id===b.dataset.dupsk); if(!src) return;
+    const c=copyOf(src.id===sk.id?sk:src);
+    try{ await store.save(c); }catch(_){ toast(tt("השמירה נכשלה, ננסה שוב בשינוי הבא")); return; }
+    await closeDoc(); docReturn=null; $('#backDoc').hidden=true; openSketch(clone(c)); closeModal();
+    toast(tt("נוצר עותק. השינויים יישמרו בעותק בלבד, המקור נשאר כמו שהיה"));
+    setTimeout(()=>{const n=$('#skname'); n.focus(); n.select();},50);
+  });
   modalEl.querySelectorAll('[data-delsk]').forEach(b=>b.onclick=async()=>{
     if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent=tt("למחוק?");return;}
     const id=b.dataset.delsk; try{await store.remove(id);}catch(_){toast(tt("המחיקה נכשלה"));return;}
@@ -1261,6 +1308,10 @@ async function showList(){
 }
 $('#listBtn').onclick=showList;
 $('#listBtn').title=tt("הסקיצות והמסמכים שלי");$('#listBtn').setAttribute('aria-label',tt("הסקיצות והמסמכים שלי"));
+function copyOf(s){ // independent copy under a new name; the original is untouched
+  const c=clone(plain(s)); c.id='s'+uid(); c.name=(s.name||tt("סקיצה"))+tt(" (עותק)"); c.updated=Date.now();
+  c.shapes.forEach(x=>{x.id=uid();}); return c;
+}
 function openSketch(s){
   sk=s; sk.shapes.forEach(x=>{if(!x.id)x.id=uid();});
   sel=null; $('#skname').value=sk.name||''; sheet.hidden=true; mainEl.classList.remove('has-panel'); if(draw){draw=null;updDrawBar();} $('#addGroup').hidden=false;
@@ -1289,7 +1340,7 @@ function exportSVG(sx=sk,o={}){
   .h1{font-size:40px;font-weight:700;fill:#1c232d}.h2{font-size:20px;fill:#5d6774}.th{font-size:19px;fill:#5d6774}.td{font-size:21px;fill:#1c232d}.tb{font-size:22px;font-weight:700;fill:#1c232d}
   </style><rect width="100%" height="100%" fill="#ffffff"/>
 `+(hd?`<text class="h1" x="${MX(R)}" y="62" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${esc(sx.name||tt("סקיצה"))}</text>
-  <text class="h2" x="${MX(R)}" y="100" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${dateStr(Date.now())} · ${IMP?tt("מידות ברגל ואינץ׳"):tt("מידות במטרים")} ${tt("· סה״כ שטח")} ${fAU(tot)}</text>
+  <text class="h2" x="${MX(R)}" y="100" direction="${RTL?'rtl':'ltr'}" text-anchor="start">${sx.showDate===false?'':dateStr(Date.now())+' · '}${IMP?tt("מידות ברגל ואינץ׳"):tt("מידות במטרים")} ${tt("· סה״כ שטח")} ${fAU(tot)}</text>
   <line x1="${pad}" y1="${head-8}" x2="${R}" y2="${head-8}" stroke="#d8dcd3" stroke-width="2"/>`:'')+b+l;
   if(tb&&rows.length){
     let y=head+dh+40; const cols=[R,R-460,R-760,R-1010];
@@ -1345,7 +1396,16 @@ async function backupIn(file){
 }
 $('#expBtn').onclick=()=>exportMenu([
   {icon:'image',label:tt('תמונה (PNG)'),desc:tt('לשליחה בוואטסאפ או להדבקה במסמך'),run:exportPng},
-  {icon:'file',label:'PDF',desc:tt('דף A4 עם השרטוט וטבלת השטחים'),run:async()=>{toast(tt('מכין PDF…'));savePdf(await sketchPdf(sk),safeName(sk.name,tt('סקיצה')));}}]);
+  {icon:'file',label:'PDF',desc:tt('דף A4 עם השרטוט וטבלת השטחים'),run:async()=>{toast(tt('מכין PDF…'));savePdf(await sketchPdf(sk),safeName(sk.name,tt('סקיצה')));}},
+  {icon:'folder',label:tt('קובץ סקיצה לעריכה'),desc:tt('אפשר לפתוח אותו שוב באפליקציה ולהמשיך לערוך (הסקיצות שלי ← ייבוא מקובץ)'),run:()=>exportSketchFile(sk)}],
+  {get:()=>sk.showDate!==false,set:v=>{if(v)delete sk.showDate; else sk.showDate=false; scheduleSave();}});
+async function exportSketchFile(s){
+  await flushSketch();
+  const d=new Date(),json=JSON.stringify({app:'sirtuti',format:1,exported:d.toISOString(),sketches:[{id:s.id,...plain(s)}]},null,1);
+  try{ const r=await saveFile(safeName(s.name,tt('סקיצה'))+'.sirtuti.json',json,'json',tt("גיבוי שרטוטי"));
+    if(r==='saved') toast(tt("קובץ הסקיצה נשמר")); else if(r==='fallback') toast(tt("שמירת קבצים לא זמינה כאן")); }
+  catch(e){ toast(tt("שמירת הגיבוי נכשלה")); }
+}
 async function exportPng(){
   const ex=exportSVG(); if(!ex){toast(tt("אין צורות לשמירה"));return;}
   toast(tt("מכין תמונה…"));
@@ -1498,7 +1558,8 @@ $('#docBack').onclick=async()=>{ await closeDoc(); render(); };
 $('#docList').onclick=()=>showProjects();
 $('#docWord').onclick=()=>exportMenu([
   {icon:'file',label:'Word (.docx)',desc:tt('לעריכה נוספת ושליחה ללקוח'),run:exportWord},
-  {icon:'file',label:'PDF',desc:tt('מסמך מוכן לשליחה והדפסה'),run:async()=>{if(!doc)return;await saveDocNow();toast(tt('מכין PDF…'));savePdf(await docPdf(),safeName(doc.name,tt('פרויקט')));}}]);
+  {icon:'file',label:'PDF',desc:tt('מסמך מוכן לשליחה והדפסה'),run:async()=>{if(!doc)return;await saveDocNow();toast(tt('מכין PDF…'));savePdf(await docPdf(),safeName(doc.name,tt('פרויקט')));}}],
+  {get:()=>doc&&doc.showDate!==false,set:v=>{if(!doc)return; if(v)delete doc.showDate; else doc.showDate=false; scheduleDocSave();}});
 
 // projects list (second tab of "My sketches")
 function listTabs(active){
@@ -1543,7 +1604,7 @@ async function exportWord(){
     spacing:{before:o.before||0,after:o.after??120},indent:o.indent?{start:o.indent}:undefined});
   const out=[],m=doc.meta||{};
   out.push(P(R(doc.name||tt("פרויקט"),{size:40,bold:true,color:'1C232D'}),{after:60,heading:HeadingLevel.TITLE}));
-  const metaLine=[m.client&&(tt("לקוח: ")+m.client),m.address&&(tt("כתובת: ")+m.address),m.date&&(tt("תאריך: ")+fmtDate(m.date))].filter(Boolean).join('   ·   ');
+  const metaLine=[m.client&&(tt("לקוח: ")+m.client),m.address&&(tt("כתובת: ")+m.address),m.date&&doc.showDate!==false&&(tt("תאריך: ")+fmtDate(m.date))].filter(Boolean).join('   ·   ');
   if(metaLine) out.push(P(R(metaLine,{color:'5D6774'}),{after:240}));
   const cell=(t,o={})=>new TableCell({children:[P(R(t,{bold:o.bold,size:20}),{after:0})],width:{size:o.w,type:WidthType.PERCENTAGE},
     shading:o.fill?{type:ShadingType.CLEAR,color:'auto',fill:o.fill}:undefined,margins:{top:60,bottom:60,left:100,right:100}});
@@ -1741,7 +1802,7 @@ async function sketchPdf(s){
   const ex=exportSVG(s,{header:false,table:false,foot:false,fs:26}); if(!ex) return null;
   const P=new PdfPages(),rows=rowsData(s),tot=rows.filter(r=>r.inc).reduce((t,r)=>t+r.area,0);
   P.text(s.name||tt('סקיצה'),{size:20,weight:700,after:2});
-  P.text(dateStr(Date.now())+'  ·  '+(IMP?tt('מידות ברגל ואינץ׳'):tt('מידות במטרים'))+'  ·  '+tt('סה״כ שטח: ')+fAU(tot),{size:10,color:'#5D6774',after:2});
+  P.text((s.showDate===false?'':dateStr(Date.now())+'  ·  ')+(IMP?tt('מידות ברגל ואינץ׳'):tt('מידות במטרים'))+'  ·  '+tt('סה״כ שטח: ')+fAU(tot),{size:10,color:'#5D6774',after:2});
   P.rule(); await P.image(svgSrc(ex),ex.w,ex.h);
   if(rows.length){
     P.table([{w:.4},{w:.2},{w:.2,end:true},{w:.2,end:true}],
@@ -1755,7 +1816,7 @@ async function docPdf(){
   if(document.fonts&&document.fonts.ready) await document.fonts.ready;
   const P=new PdfPages(),m=doc.meta||{};
   P.text(doc.name||tt('פרויקט'),{size:22,weight:700,after:2});
-  const meta=[m.client&&(tt('לקוח: ')+m.client),m.address&&(tt('כתובת: ')+m.address),m.date&&(tt('תאריך: ')+fmtDate(m.date))].filter(Boolean).join('   ·   ');
+  const meta=[m.client&&(tt('לקוח: ')+m.client),m.address&&(tt('כתובת: ')+m.address),m.date&&doc.showDate!==false&&(tt('תאריך: ')+fmtDate(m.date))].filter(Boolean).join('   ·   ');
   if(meta) P.text(meta,{size:10,color:'#5D6774',after:2});
   P.rule();
   for(const b of doc.blocks){
@@ -1783,11 +1844,35 @@ async function savePdf(blob,name){
     if(r==='saved') toast(tt('קובץ ה-PDF נשמר')); else if(r==='cancel') $('#toast').hidden=true; else toast(tt('שמירת קבצים לא זמינה כאן')); }
   catch(e){ toast(tt('שמירת הקובץ נכשלה')); }
 }
-function exportMenu(opts){
+function exportMenu(opts,date){
   modal(`<h2>${tt('ייצוא')}<button class="ib" data-close aria-label="${esc(tt('סגירה'))}">${ic('x')}</button></h2><div class="expopts">`+
-    opts.map((o,i)=>`<button class="expopt" data-exp="${i}">${ic(o.icon)}<span><b>${o.label}</b><small>${o.desc}</small></span></button>`).join('')+`</div>`);
+    opts.map((o,i)=>`<button class="expopt" data-exp="${i}">${ic(o.icon)}<span><b>${o.label}</b><small>${o.desc}</small></span></button>`).join('')+`</div>`+
+    (date?`<label class="tg" style="margin-top:14px"><input type="checkbox" id="expDate" ${date.get()?'checked':''}>${tt('הצגת התאריך בכותרת')}</label>`:''));
+  if(date) $('#expDate').onchange=e=>date.set(e.target.checked);
   modalEl.querySelectorAll('[data-exp]').forEach(b=>b.onclick=()=>{closeModal();opts[+b.dataset.exp].run();});
 }
+
+/* ---------- welcome tour ---------- */
+const TOUR_K='sirtuti.tour';
+function tourSteps(){return [
+ {i:'📐',t:tt("ברוכים הבאים לשרטוטי"),b:`<p>${tt("סקיצות עם מידות לביקורי שטח: מציירים חדרים וחלקות, מזינים מידות, ומקבלים שטח והיקף לכל צורה וסה״כ להצעת מחיר. זו הערכה מהירה, לא מדידה מדויקת.")}</p><p>${tt("המדריך הקצר הזה עובר על כל מה שאפשר לעשות. אפשר לפתוח אותו שוב מההגדרות.")}</p>`},
+ {i:'▭',t:tt("הוספת צורות"),b:`<ul><li>${tt("„הוספת צורה\": מלבן, משולש, טרפז, מצולע, חדר L, עיגול, קו מידה ומצולע חופשי.")}</li><li>${tt("מזינים מידות בחלונית, גוררים למקום ומסובבים בידית העגולה.")}</li><li>${tt("„הצמדה לפינות\" (המגנט) מיישרת פינות של צורות זו לזו.")}</li><li>${tt("שכפול, הבאה לחזית, ביטול ושחזור זמינים תמיד.")}</li></ul>`},
+ {i:'✏️',t:tt("שרטוט ידני"),b:`<ul><li>${tt("„שרטוט ידני\": נקודה אחר נקודה או ביד חופשית, והקווים מתיישרים אוטומטית.")}</li><li>${tt("סוגרים את הצורה בנקודת ההתחלה, או משאירים קו פתוח (קיר, גדר, צנרת).")}</li><li>${tt("אחר כך אפשר לתקן את אורך כל צלע ואת הזוויות בחלונית.")}</li></ul>`},
+ {i:'💬',t:tt("טקסט וחצים"),b:`<p>${tt("ב„הוספת צורה\" ← „הערות על הסקיצה\" אפשר להוסיף טקסט חופשי (כמה שורות, בכל גודל וצבע) וחצים. גוררים, מסובבים ומשכפלים אותם כמו כל צורה. הם מופיעים בייצוא ולא נספרים בשטח.")}</p>`},
+ {i:'∑',t:tt("שטחים וסה״כ"),b:`<ul><li>${tt("הלחצן למעלה מציג את סה״כ השטח. לחיצה עליו פותחת טבלה שאפשר להעתיק כטקסט.")}</li><li>${tt("לכל צורה אפשר להסתיר מידות, שטח או היקף, ולבחור אם היא נכללת בסה״כ.")}</li><li>${tt("ב„הגדרות\" בוחרים מטרי או רגל ואינץ׳. המידות נשמרות במדויק ורק התצוגה משתנה.")}</li></ul>`},
+ {i:'📁',t:tt("שמירה והסקיצות שלי"),b:`<ul><li>${tt("הכול נשמר אוטומטית. כל הסקיצות נמצאות ב„הסקיצות שלי\".")}</li><li>${tt("משם פותחים, מוחקים ומשכפלים סקיצה (שמירה בשם אחר), ומגבים או מייבאים קובץ.")}</li><li>${tt("אפשר להתחבר לחשבון Google כדי לסנכרן בין מכשירים, ובאפליקציה למחשב לשמור אוטומטית לתיקייה.")}</li></ul>`},
+ {i:'📤',t:tt("ייצוא ומסמכי פרויקט"),b:`<ul><li>${tt("כפתור ההורדה: תמונה, PDF, או קובץ סקיצה שאפשר לפתוח ולערוך שוב. אפשר לבחור אם התאריך יופיע בכותרת.")}</li><li>${tt("„מסמכי פרויקט\" (בחלון „הסקיצות שלי\"): סיכום ביקור עם לקוח, כתובת, טקסט, משימות וסקיצות, וטבלת שטחים אוטומטית. מייצאים ל-Word או PDF.")}</li></ul>`}
+];}
+function showTour(i=0){
+  const st=tourSteps(),n=st.length,x=st[i],last=i===n-1;
+  modal(`<h2>${x.t}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2><div class="tour"><div class="big">${x.i}</div>${x.b}</div>
+    <div class="dots">${st.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div>
+    <div class="btnrow" style="justify-content:space-between"><button class="chip" id="tourPrev" ${i?'':'disabled'}>${tt("הקודם")}</button><button class="primary" id="tourNext">${last?tt("מתחילים!"):tt("הבא")}</button></div>`);
+  try{localStorage.setItem(TOUR_K,'1');}catch(e){}
+  $('#tourPrev').onclick=()=>showTour(i-1);
+  $('#tourNext').onclick=()=>last?closeModal():showTour(i+1);
+}
+function maybeTour(){ let seen=true; try{seen=!!localStorage.getItem(TOUR_K);}catch(e){} if(!seen&&!Object.keys(local.all()).length&&!doc) showTour(0); }
 
 /* ---------- settings ---------- */
 function showSettings(){
@@ -1797,7 +1882,9 @@ function showSettings(){
     <div class="setg"><b>${tt('יחידות מידה')}</b><div class="tabs">
       <button data-units="m" class="${!IMP?'on':''}">${tt('מטרי')}<small>${tt('מ׳')} · ${tt('מ״ר')}</small></button>
       <button data-units="ft" class="${IMP?'on':''}">${tt('אמריקאי')}<small>ft · in · ft²</small></button></div>
-      <div class="hint">${tt('המידות נשמרות תמיד במדויק, ושינוי היחידות משנה רק את התצוגה וההזנה. ביחידות אמריקאיות מקלידים למשל 12\' 6" או 12.5.')}</div></div>`);
+      <div class="hint">${tt('המידות נשמרות תמיד במדויק, ושינוי היחידות משנה רק את התצוגה וההזנה. ביחידות אמריקאיות מקלידים למשל 12\' 6" או 12.5.')}</div></div>
+    <div class="btnrow"><button class="chip" id="tourBtn">${tt('מדריך למשתמש חדש')}</button></div>`);
+  $('#tourBtn').onclick=()=>showTour(0);
   const apply=async(k,v)=>{ try{localStorage.setItem(k,v);}catch(e){} await flushSketch(); if(doc&&docSaveT) await saveDocNow(); location.reload(); };
   modalEl.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>{ if(b.dataset.lang!==LANG) apply('sirtuti.lang',b.dataset.lang); });
   modalEl.querySelectorAll('[data-units]').forEach(b=>b.onclick=()=>{ if(b.dataset.units!==UNITS) apply('sirtuti.units',b.dataset.units); });
@@ -1817,6 +1904,7 @@ store.initClaude().then(async()=>{
   else if(!sk.example) setStatus(savedText());
   const v=getView(),pv=v&&all.find(x=>x.id===v&&isProj(x)); if(pv) openDoc(pv);
   cloud.init();
+  maybeTour();
 });
 })();
 </script>
