@@ -2,6 +2,12 @@
 // Hebrew is the built-in default; add a language by adding an object here.
 window.SIRTUTI_I18N = {
  "en": {
+  "יש גירסה חדשה": "A new version is available",
+  "גירסה חדשה:": "New version:",
+  "מורידים ומאשרים את ההתקנה מעל הקיימת. הסקיצות נשמרות.": "Download it and confirm the install over the existing app. Your sketches are kept.",
+  "עדכון": "Update",
+  "אחר כך": "Later",
+  "כל אפשרויות ההורדה": "All download options",
   "ברוכים הבאים לשרטוטי": "Welcome to Sirtuti",
   "סקיצות עם מידות לביקורי שטח: מציירים חדרים וחלקות, מזינים מידות, ומקבלים שטח והיקף לכל צורה וסה״כ להצעת מחיר. זו הערכה מהירה, לא מדידה מדויקת.": "Dimensioned sketches for site visits: draw rooms and lots, enter measurements, and get the area and perimeter of every shape plus a total for your quote. It is a fast estimate, not a survey.",
   "המדריך הקצר הזה עובר על כל מה שאפשר לעשות. אפשר לפתוח אותו שוב מההגדרות.": "This short guide covers everything you can do. You can open it again from Settings.",
@@ -329,6 +335,12 @@ window.SIRTUTI_I18N = {
   "→ ואז סגירה": "→ then closes"
  },
  "fr": {
+  "יש גירסה חדשה": "Une nouvelle version est disponible",
+  "גירסה חדשה:": "Nouvelle version :",
+  "מורידים ומאשרים את ההתקנה מעל הקיימת. הסקיצות נשמרות.": "Téléchargez-la et confirmez l’installation par-dessus l’existante. Vos croquis sont conservés.",
+  "עדכון": "Mettre à jour",
+  "אחר כך": "Plus tard",
+  "כל אפשרויות ההורדה": "Toutes les options de téléchargement",
   "ברוכים הבאים לשרטוטי": "Bienvenue dans Sirtuti",
   "סקיצות עם מידות לביקורי שטח: מציירים חדרים וחלקות, מזינים מידות, ומקבלים שטח והיקף לכל צורה וסה״כ להצעת מחיר. זו הערכה מהירה, לא מדידה מדויקת.": "Des croquis cotés pour les visites sur place : dessinez pièces et terrains, saisissez les mesures et obtenez la surface et le périmètre de chaque forme, plus un total pour votre devis. C’est une estimation rapide, pas un relevé précis.",
   "המדריך הקצר הזה עובר על כל מה שאפשר לעשות. אפשר לפתוח אותו שוב מההגדרות.": "Ce court guide présente tout ce que vous pouvez faire. Vous pouvez le rouvrir depuis les Réglages.",

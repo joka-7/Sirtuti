@@ -1707,6 +1707,31 @@ async function showDownloads(){
   modalEl.querySelectorAll('[data-ext]').forEach(a=>a.addEventListener('click',e=>{if(openExternal(a.href)) e.preventDefault();}));
 }
 
+/* ---------- automatic update check (desktop + Android apps) ---------- */
+// At most every 6 hours, on start: if a newer release exists, offer a direct download of the installer for this OS.
+async function checkUpdate(){
+  const T=window.__TAURI__; if(!IS_TAURI||!T||!T.app||!modalEl.hidden) return;
+  try{
+    let last=0; try{last=+localStorage.getItem('sirtuti.updchk')||0;}catch(e){}
+    if(Date.now()-last<6*3600e3) return;
+    const mine=await T.app.getVersion(),r=await fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{Accept:'application/vnd.github+json'}});
+    if(!r.ok) return; try{localStorage.setItem('sirtuti.updchk',String(Date.now()));}catch(e){}
+    const rel=await r.json(),ver=String(rel.tag_name||'').replace(/^v/,'');
+    if(!ver||!newer(ver,mine)) return;
+    try{ if(localStorage.getItem('sirtuti.updskip')===ver) return; }catch(e){}
+    const os=detectOS(),entry=DL_OS.find(o=>o.k===os); if(!entry) return;
+    let asset=null; for(const f of entry.files){ asset=(rel.assets||[]).find(x=>f.re.test(x.name)); if(asset) break; }
+    if(!asset||!modalEl.hidden) return;
+    modal(`<h2>${tt("יש גירסה חדשה")}<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button></h2>
+      <div class="dlver">${tt("הגירסה שלך:")} <b dir="ltr">${esc(mine)}</b><span class="new">${tt("גירסה חדשה:")} <b dir="ltr">${esc(ver)}</b></span></div>
+      <div class="hint" style="margin-bottom:12px">${tt("מורידים ומאשרים את ההתקנה מעל הקיימת. הסקיצות נשמרות.")}</div>
+      <div class="btnrow"><a class="primary" id="updGo" href="${esc(asset.browser_download_url)}" target="_blank" rel="noopener" style="text-decoration:none">${tt("עדכון")}</a><button class="chip" id="updLater">${tt("אחר כך")}</button><button class="chip" id="updAll">${tt("כל אפשרויות ההורדה")}</button></div>`);
+    $('#updGo').addEventListener('click',e=>{ if(openExternal(asset.browser_download_url)) e.preventDefault(); });
+    $('#updLater').onclick=()=>{ try{localStorage.setItem('sirtuti.updskip',ver);}catch(e){} closeModal(); };
+    $('#updAll').onclick=showDownloads;
+  }catch(e){}
+}
+
 /* ---------- PDF export ---------- */
 // Pages are drawn on canvases (the browser handles Hebrew/RTL shaping), then packed into a PDF as JPEG images.
 function pdfFromCanvases(canvases){
@@ -1905,6 +1930,7 @@ store.initClaude().then(async()=>{
   const v=getView(),pv=v&&all.find(x=>x.id===v&&isProj(x)); if(pv) openDoc(pv);
   cloud.init();
   maybeTour();
+  setTimeout(checkUpdate,2500);
 });
 })();
 </script>
