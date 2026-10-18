@@ -2,6 +2,8 @@
 // Hebrew is the built-in default; add a language by adding an object here.
 window.SIRTUTI_I18N = {
  "en": {
+  "עודכן ממכשיר אחר": "Updated from another device",
+  "שינויים אחרונים עוד לא עלו ל-Drive ועלולים ללכת לאיבוד. לחץ שוב להתנתקות בכל זאת": "Your latest changes have not reached Drive yet and may be lost. Tap again to sign out anyway",
   "נשמר · מסנכרן ל-Drive…": "Saved · syncing to Drive…",
   "נשמר במכשיר · הסנכרון ל-Drive נכשל": "Saved on this device · Drive sync failed",
   "נשמר ב-Google Drive שלך": "Saved in your Google Drive",
@@ -344,6 +346,8 @@ window.SIRTUTI_I18N = {
   "→ ואז סגירה": "→ then closes"
  },
  "fr": {
+  "עודכן ממכשיר אחר": "Mis à jour depuis un autre appareil",
+  "שינויים אחרונים עוד לא עלו ל-Drive ועלולים ללכת לאיבוד. לחץ שוב להתנתקות בכל זאת": "Vos dernières modifications ne sont pas encore dans Drive et pourraient être perdues. Touchez à nouveau pour vous déconnecter quand même",
   "נשמר · מסנכרן ל-Drive…": "Enregistré · synchronisation avec Drive…",
   "נשמר במכשיר · הסנכרון ל-Drive נכשל": "Enregistré sur cet appareil · la synchronisation avec Drive a échoué",
   "נשמר ב-Google Drive שלך": "Enregistré dans votre Google Drive",

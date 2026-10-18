@@ -778,7 +778,7 @@ async function doSave(){
 /* ---------- Google Drive account (optional sync) ---------- */
 // The sync module is only downloaded once the user has used it (or opens the account dialog), so people who
 // never sign in never contact Google. Client ID: web/drive-config.js (empty = the account button stays hidden).
-const cloud={d:null,user:null,failed:false,lastSync:0,syncing:null,
+const cloud={d:null,user:null,failed:false,lastSync:0,syncing:null,gen:0,busy:false,retryT:null,
   configured(){return !!window.SIRTUTI_GOOGLE_CLIENT_ID&&!IS_TAURI&&!window.claude;},
   async init(){
     if(!this.configured()) return;
@@ -799,25 +799,37 @@ const cloud={d:null,user:null,failed:false,lastSync:0,syncing:null,
     const was=this.user; this.user=u; updAcct();
     if(!u){ if(was){ syncSt=''; if(!sk.example) setStatus(savedText()); } return; }
     // Data that belongs to a different Google account is discarded, never merged into this one.
-    if(owner.get()&&owner.get()!==u.uid){
-      const o=local.read(); o.sketches={}; local.write(o); pending.write({});
-      await closeDoc(); docReturn=null; $('#backDoc').hidden=true; openSketch(sampleSketch());
-    }
+    if(owner.get()&&owner.get()!==u.uid) await this.wipe();
     owner.set(u.uid);
     await this.sync(true).catch(()=>{});
     if(!sk.example) setStatus(savedText());
   },
   // upload one sketch; the edit stays in `pending` until Drive confirms it
   push(item){
+    if(this.busy) return Promise.resolve();
     pending.mark(item.id,{k:'u',t:item.updated});
     if(!this.user) return Promise.resolve();
     setSync('pending');
-    return this.d.upsert(item).then(()=>{ pending.landed(item.id,{k:'u',t:item.updated}); setSync('ok'); }).catch(()=>setSync('err'));
+    return this.d.upsert(item).then(()=>{ pending.landed(item.id,{k:'u',t:item.updated}); setSync('ok'); }).catch(()=>this.failed1());
   },
   drop(id){
+    if(this.busy) return Promise.resolve();
     pending.mark(id,{k:'d'});
     if(!this.user) return Promise.resolve();
-    return this.d.remove(id).then(()=>pending.landed(id,{k:'d'})).catch(()=>setSync('err'));
+    return this.d.remove(id).then(()=>pending.landed(id,{k:'d'})).catch(()=>this.failed1());
+  },
+  // a failed upload is retried on its own (otherwise it waits for the next focus or list)
+  failed1(){ setSync('err'); if(!this.retryT) this.retryT=setTimeout(()=>{ this.retryT=null; this.sync(true).catch(()=>{}); },30000); },
+  // forget this device's data without saving anything first: pending saves are cancelled, an in-flight sync is voided
+  async wipe(){
+    this.busy=true; this.gen++;
+    try{
+      clearTimeout(saveT); saveT=null; clearTimeout(docSaveT); docSaveT=null;
+      for(let i=0;i<40&&saving;i++) await new Promise(r=>setTimeout(r,50));
+      doc=null; docv.hidden=true; setView(''); docReturn=null; $('#backDoc').hidden=true;
+      const o=local.read(); o.sketches={}; local.write(o); pending.write({});
+      openSketch(sampleSketch());
+    }finally{ this.busy=false; }
   },
   // Pull everything from Drive and merge: edits not yet uploaded win over Drive's copy, local deletes are replayed,
   // and ids Drive says were deleted elsewhere are dropped here.
@@ -825,10 +837,13 @@ const cloud={d:null,user:null,failed:false,lastSync:0,syncing:null,
     if(!this.d||!this.user) return Promise.resolve();
     if(this.syncing) return this.syncing;
     if(!force&&Date.now()-this.lastSync<20000) return Promise.resolve();
+    const gen=this.gen;
     this.syncing=(async()=>{
       try{
         setSync('pending');
-        const rem=await this.d.loadAll(),L=local.all(),P=pending.read(),remote=new Map(rem.items.map(o=>[o.id,o]));
+        const rem=await this.d.loadAll();
+        if(gen!==this.gen||this.busy) return;   // the device was wiped or switched account meanwhile: this answer is stale
+        const L=local.all(),P=pending.read(),remote=new Map(rem.items.map(o=>[o.id,o]));
         let changed=false;
         rem.items.forEach(o=>{
           if(!Array.isArray(o.shapes)||P[o.id]) return; const c=L[o.id];
@@ -837,14 +852,14 @@ const cloud={d:null,user:null,failed:false,lastSync:0,syncing:null,
         rem.deletedIds.forEach(id=>{ const p=P[id]; if(L[id]&&!(p&&p.k==='u')){ local.del(id); changed=true; } });
         const jobs=[];
         Object.values(local.all()).forEach(x=>{
-          const o=remote.get(x.id),p=P[x.id]; if(!x||!Array.isArray(x.shapes)||(p&&p.k==='d')) return;
+          if(!x||!Array.isArray(x.shapes)) return; const o=remote.get(x.id),p=P[x.id]; if(p&&p.k==='d') return;
           if((p&&p.k==='u')||!o||(o.updated||0)<(x.updated||0)) jobs.push(this.push({id:x.id,...plain(x)}));
         });
         Object.keys(P).forEach(id=>{ if(P[id].k==='d') jobs.push(this.drop(id)); });
         await Promise.all(jobs);
         this.lastSync=Date.now(); setSync('ok');
         if(changed) afterRemoteSync();
-      }catch(e){ setSync('err'); throw e; }
+      }catch(e){ if(this.user) this.failed1(); throw e; }
       finally{ this.syncing=null; }
     })();
     return this.syncing;
@@ -859,22 +874,41 @@ const cloud={d:null,user:null,failed:false,lastSync:0,syncing:null,
     }
   },
   // The device forgets the account and its data (it stays in the user's Drive); the next account starts clean.
+  // Edits still waiting for Drive are uploaded first (the dialog warns when that may not be possible).
   async leave(){
-    await this.d.signOut(); this.forget();
+    try{ await flushSketch(); if(doc&&docSaveT) await saveDocNow(); await this.d.flushed(); await new Promise(r=>setTimeout(r,0)); }catch(e){}
+    await this.d.signOut(); await this.forget();
   },
-  forget(){
-    const o=local.read(); o.sketches={}; local.write(o); pending.write({}); owner.set('');
-    this.user=null; this.lastSync=0; syncSt=''; updAcct();
-    closeDoc().then(()=>{ docReturn=null; $('#backDoc').hidden=true; openSketch(sampleSketch()); });
+  async forget(){
+    this.busy=true; this.gen++; owner.set(''); this.user=null; this.lastSync=0; syncSt=''; updAcct();
+    this.busy=false; await this.wipe();
   }
 };
-// after a sync changed local data: refresh what is on screen, unless the user has unsaved work
-function afterRemoteSync(){
-  if(saveT||saving||undoS.length) return;
-  const cur=local.all()[sk.id];
-  if(sk.example){ const l=Object.values(local.all()).filter(x=>!isProj(x)&&Array.isArray(x.shapes)).sort((a,b)=>(b.updated||0)-(a.updated||0)); if(l[0]) openSketch(clone(l[0])); }
-  else if(cur&&(cur.updated||0)>(sk.updated||0)) openSketch(clone(cur));
+// After a sync changed local data, bring what is on screen up to date, so the next save cannot overwrite another
+// device's newer work. Waits while the user is mid-edit.
+function afterRemoteSync(tries=0){
+  const typing=/INPUT|TEXTAREA/.test((document.activeElement||{}).tagName||'');
+  const busy=saveT||saving||docSaveT||(act&&act.type!=='none')||typing;
+  const L=local.all(),cur=L[sk.id],pd=doc?L[doc.id]:null;
+  const skBehind=!sk.example&&cur&&(cur.updated||0)>(sk.updated||0),skGone=!sk.example&&!cur&&!saveT&&!saving;
+  const docBehind=doc&&pd&&(pd.updated||0)>(doc.updated||0),docGone=doc&&!pd&&!docSaveT;
+  if(sk.example){ const l=Object.values(L).filter(x=>!isProj(x)&&Array.isArray(x.shapes)).sort((a,b)=>(b.updated||0)-(a.updated||0)); if(l[0]&&!busy&&!undoS.length) openSketch(clone(l[0])); return; }
+  if(!(skBehind||skGone||docBehind||docGone)) return;
+  if(busy){ if(tries<10) setTimeout(()=>afterRemoteSync(tries+1),1500); return; }
+  if(docBehind) openDoc(clone(pd));
+  else if(docGone){ docv.hidden=true; doc=null; setView(''); }
+  if(skBehind) openSketch(clone(cur));
+  else if(skGone){ const l=Object.values(L).filter(x=>!isProj(x)&&Array.isArray(x.shapes)).sort((a,b)=>(b.updated||0)-(a.updated||0)); openSketch(l[0]?clone(l[0]):sampleSketch()); }
+  toast(tt("עודכן ממכשיר אחר"));
 }
+// another tab of this browser signed in, out or switched account: this tab's in-memory state is stale
+window.addEventListener('storage',e=>{
+  if(e.key===owner.K){ location.reload(); return; }
+  if(e.key==='sirtuti.drive.session'){
+    let uid=null; try{uid=JSON.parse(e.newValue||'null')?.user?.uid||null;}catch(_){}
+    if((uid||null)!==((cloud.user&&cloud.user.uid)||null)&&(uid||cloud.user)) location.reload();
+  }
+});
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&cloud.user) cloud.sync().catch(()=>{}); });
 function updAcct(){
   const b=$('#acctBtn'),u=cloud.user; b.classList.toggle('on',!!u);
@@ -888,9 +922,10 @@ function showAcct(){
     <div class="hint">${tt("הסקיצות נשמרות בתיקייה נסתרת ב-Google Drive שלך, ורק האפליקציה הזו יכולה לקרוא אותה. אין לנו שרת ואין לנו גישה אליהן. הן מסתנכרנות בין המכשירים שמחוברים לאותו חשבון, וגם בלי אינטרנט אפשר לעבוד.")}</div>
     <div class="btnrow"><button class="chip" id="signOut">${tt("התנתקות")}</button><button class="chip danger" id="delAll">${tt("מחיקת כל הנתונים שלי מ-Drive")}</button></div>`);
     const armed=(b,txt,run)=>b.onclick=async()=>{ if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent=txt; return; } b.disabled=true; await run(); };
-    armed($('#signOut'),tt("לחץ שוב: הסקיצות יימחקו מהמכשיר הזה (הן נשארות ב-Drive)"),async()=>{ await cloud.leave(); closeModal(); toast(tt("התנתקת. הסקיצות נשארות ב-Google Drive שלך")); });
+    const unsynced=Object.keys(pending.read()).length>0;
+    armed($('#signOut'),unsynced?tt("שינויים אחרונים עוד לא עלו ל-Drive ועלולים ללכת לאיבוד. לחץ שוב להתנתקות בכל זאת"):tt("לחץ שוב: הסקיצות יימחקו מהמכשיר הזה (הן נשארות ב-Drive)"),async()=>{ await cloud.leave(); closeModal(); toast(tt("התנתקת. הסקיצות נשארות ב-Google Drive שלך")); });
     armed($('#delAll'),tt("לחץ שוב: מוחק את הסקיצות מ-Drive ומהמכשיר הזה"),async()=>{
-      try{ await cloud.d.deleteAllSyncedData(); cloud.forget(); closeModal(); toast(tt("הנתונים נמחקו מ-Google Drive ומהמכשיר הזה")); }
+      try{ await cloud.d.deleteAllSyncedData(); await cloud.forget(); closeModal(); toast(tt("הנתונים נמחקו מ-Google Drive ומהמכשיר הזה")); }
       catch(e){ $('#delAll').disabled=false; toast(tt("המחיקה נכשלה, נסה שוב")); }
     });
   }else{
