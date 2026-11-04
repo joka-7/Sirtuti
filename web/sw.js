@@ -1,6 +1,6 @@
 // Sirtuti service worker: app shell cached for offline use.
 // Bump VERSION on every release so phones pick up the new files.
-const VERSION = 'sirtuti-v11';
+const VERSION = 'sirtuti-v12';
 const SHELL = ['./', 'index.html', 'i18n.js', 'drive-config.js', 'drive-sync.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -25,7 +25,9 @@ self.addEventListener('fetch', e => {
 
   // Network first for the page and its config (fresh when online), cache first for everything else.
   if (req.mode === 'navigate' || url.pathname.endsWith('/drive-config.js')) {
-    const key = req.mode === 'navigate' ? 'index.html' : req;
+    // Only the app itself is cached as the offline shell; other pages (privacy.html) keep their own entry.
+    const isApp = req.mode === 'navigate' && !url.pathname.endsWith('/privacy.html');
+    const key = isApp ? 'index.html' : req;
     e.respondWith(
       fetch(req)
         .then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put(key, copy)); return res; })

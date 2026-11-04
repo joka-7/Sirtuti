@@ -920,7 +920,8 @@ function showAcct(){
     modal(`<h2>${tt("חשבון Google")}${x}</h2>
     <div class="acct"><b>${esc(u.displayName||'')}</b><span dir="ltr">${esc(u.email||'')}</span></div>
     <div class="hint">${tt("הסקיצות נשמרות בתיקייה נסתרת ב-Google Drive שלך, ורק האפליקציה הזו יכולה לקרוא אותה. אין לנו שרת ואין לנו גישה אליהן. הן מסתנכרנות בין המכשירים שמחוברים לאותו חשבון, וגם בלי אינטרנט אפשר לעבוד.")}</div>
-    <div class="btnrow"><button class="chip" id="signOut">${tt("התנתקות")}</button><button class="chip danger" id="delAll">${tt("מחיקת כל הנתונים שלי מ-Drive")}</button></div>`);
+    <div class="btnrow"><button class="chip" id="signOut">${tt("התנתקות")}</button><button class="chip danger" id="delAll">${tt("מחיקת כל הנתונים שלי מ-Drive")}</button></div>
+    <div class="hint"><a href="https://joka-7.github.io/Sirtuti/privacy.html" target="_blank" rel="noopener" data-ext="1">${tt("מדיניות פרטיות")}</a></div>`);
     const armed=(b,txt,run)=>b.onclick=async()=>{ if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent=txt; return; } b.disabled=true; await run(); };
     const unsynced=Object.keys(pending.read()).length>0;
     armed($('#signOut'),unsynced?tt("שינויים אחרונים עוד לא עלו ל-Drive ועלולים ללכת לאיבוד. לחץ שוב להתנתקות בכל זאת"):tt("לחץ שוב: הסקיצות יימחקו מהמכשיר הזה (הן נשארות ב-Drive)"),async()=>{ await cloud.leave(); closeModal(); toast(tt("התנתקת. הסקיצות נשארות ב-Google Drive שלך")); });
@@ -932,7 +933,8 @@ function showAcct(){
     modal(`<h2>${tt("חשבון Google")}${x}</h2>
     <div class="hint" style="font-size:14.5px">${owner.get()?tt("החיבור ל-Google Drive פג. התחבר שוב כדי להמשיך לסנכרן. הסקיצות במכשיר נשמרות בינתיים."):tt("התחבר כדי לשמור את הסקיצות ב-Google Drive שלך ולפתוח אותן מכל מכשיר. הן נשמרות בתיקייה נסתרת שרק האפליקציה הזו קוראת, ואין לנו גישה אליהן. בלי התחברות הן נשמרות רק")+' '+(IS_TAURI?tt("במחשב הזה"):tt("בדפדפן הזה"))+'.'}</div>
     ${cloud.failed?tt("<div class=\"err\">לא ניתן להתחבר ל-Google כרגע. בדוק את החיבור לאינטרנט ונסה שוב.</div>"):''}
-    <div class="btnrow"><button class="primary" id="signIn" disabled>${tt("התחברות עם Google")}</button></div>`);
+    <div class="btnrow"><button class="primary" id="signIn" disabled>${tt("התחברות עם Google")}</button></div>
+    <div class="hint"><a href="https://joka-7.github.io/Sirtuti/privacy.html" target="_blank" rel="noopener" data-ext="1">${tt("מדיניות פרטיות")}</a></div>`);
     // Google's script is loaded now, so the click can open the popup synchronously (browsers block it otherwise)
     cloud.load().then(d=>d&&d.preload()).then(()=>{ const b=$('#signIn'); if(b) b.disabled=false; });
     $('#signIn').onclick=()=>cloud.signIn();
