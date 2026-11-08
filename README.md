@@ -29,7 +29,7 @@ The app is available in Hebrew (RTL), English and French, with metric or imperia
 - Settings: language (Hebrew / English / French) and units (metric m, m² or imperial ft-in, ft²). New users get their device language; values are always stored in meters, so switching units never changes a sketch.
 - **Project documents:** notes-style site-visit summaries with client, address and date, headings, text (lines starting with `-` become bullets), checklists, sketches placed inline, and an automatic area summary across all sketches in the document. Tap a sketch to edit it and return to the document. Export to Word (`.docx`) or PDF with the sketches as images, right-to-left in Hebrew.
 - Desktop app shows its version and tells you when a newer release is available.
-- Optional Google sign-in (Firebase) to sync sketches across devices.
+- Optional Google sign-in to sync sketches across devices through your own Google Drive (a hidden app folder only Sirtuti can read; there is no Sirtuti server, so nobody else has a copy).
 - Backup/restore of all sketches to a JSON file.
 - Desktop app: auto-save every sketch to a folder you pick (use a Google Drive / OneDrive / Dropbox folder for a cloud backup).
 - Works offline and installs as a PWA on phones and desktops.
@@ -44,35 +44,34 @@ The app is available in Hebrew (RTL), English and French, with metric or imperia
 - Project documents are stored the same way as sketches (same sync, folder and backup), as entries with `kind: "project"`.
 - **Without sign-in:** only on the device (browser storage, or the desktop app's own storage).
 - **Desktop app with an auto-save folder:** also as one file per sketch (`<name> (<id>).sirtuti.json`) in the chosen folder, rewritten on every change. Set it in *My sketches* (הסקיצות שלי) → *Auto-save to folder*. If the folder is synced by Google Drive, OneDrive or Dropbox, sketches are backed up to the cloud and shared between computers that use the same folder: new or changed files are picked up when the app opens or regains focus, and deleted files are removed.
-- **Signed in with Google (web app):** on the device and in Firestore under `users/<uid>/sketches`, synced across devices. Works offline and syncs when back online.
+- **Signed in with Google (web app):** on the device and in the user's own Google Drive (`appDataFolder`, one file per device `sirtuti-<deviceId>.json`, newest version of each sketch wins, deletes are kept as tombstones), synced across devices. Works offline and syncs when back online. Signing out removes the sketches from that device (they stay in Drive); *Delete all my data from Drive* removes them from Drive too and revokes the app's access.
 - Google sign-in is not available inside the desktop app (Google blocks sign-in from embedded webviews). Use the installed web app for sync, or move sketches with backup files.
 
-## Setting up Google sign-in (Firebase)
+## Setting up Google Drive sync
 Without this step the app runs fine, just without the account button.
 
-1. Create a project at https://console.firebase.google.com (the free Spark plan is enough).
-2. **Build → Authentication → Get started → Sign-in method:** enable **Google**.
-3. **Authentication → Settings → Authorized domains:** add `joka-7.github.io` (and `localhost` for local testing).
-4. **Build → Firestore Database → Create database** (production mode), then paste the contents of [`firestore.rules`](firestore.rules) into the **Rules** tab and publish.
-5. **Project settings → Your apps → Add app → Web.** Copy the `firebaseConfig` object into [`web/firebase-config.js`](web/firebase-config.js) as `window.SIRTUTI_FIREBASE = { ... }`.
-6. Commit and push. The Pages workflow redeploys the web app.
+1. In the [Google Cloud console](https://console.cloud.google.com), create a project (or reuse one) and enable the **Google Drive API** (`APIs & Services → Library`).
+2. **Google Auth Platform → Data Access → Add scopes:** `https://www.googleapis.com/auth/drive.appdata` (non-sensitive: no verification and no user cap). **Audience:** click **Publish app** so the status is *In production*.
+3. **Clients → Create client → Web application.** Under *Authorized JavaScript origins* add `https://joka-7.github.io` (no path) and, for local testing, `http://localhost:8000`. Leave redirect URIs empty.
+4. Copy the **Client ID** into [`web/drive-config.js`](web/drive-config.js) as `window.SIRTUTI_GOOGLE_CLIENT_ID = '...'`. It is not a secret.
+5. Commit and push. The Pages workflow redeploys the web app.
 
-The Firebase web config is not a secret; access is enforced by the Firestore rules.
+Google's sign-in script (`accounts.google.com/gsi/client`) is only loaded when the account dialog is opened or a session already exists, so people who never sign in never contact Google.
 
 ## Project layout
 ```
 web/                         The app (static, no build step)
   index.html                 Entire UI: HTML, CSS and JS
   i18n.js                    English and French translations (keys are the Hebrew source strings)
-  firebase-config.js         Firebase web config (null = no sign-in)
-  vendor/firebase.js         Bundled Firebase SDK (auth + firestore)
+  drive-sync.js              Google Drive sync (ES module, loaded on demand)
+  drive-config.js            Google OAuth client ID (empty = no sign-in)
   vendor/docx.js             Bundled docx library for Word export
   sw.js                      Service worker for offline use
   manifest.webmanifest       PWA manifest
   icons/
 src-tauri/                   Desktop app (Tauri 2) wrapping web/
 tools/*-entry.js             Entries for the vendor bundles
-firestore.rules              Firestore security rules
+tests/                       Unit tests (node --test) for the Drive sync module
 .github/workflows/
   pages.yml                  Deploys web/ to GitHub Pages on push to main
   release.yml                Builds desktop installers on tag push (v*)
@@ -83,7 +82,7 @@ firestore.rules              Firestore security rules
 npm install
 npm run dev                  # serve web/ at http://localhost:8000
 npm run tauri dev            # run the desktop app (needs Rust + Tauri prerequisites)
-npm run build:firebase       # rebuild web/vendor/firebase.js after upgrading firebase
+npm test                     # unit tests for web/drive-sync.js
 npm run build:docx           # rebuild web/vendor/docx.js after upgrading docx
 ```
 Tauri prerequisites: https://v2.tauri.app/start/prerequisites/

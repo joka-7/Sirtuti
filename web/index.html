@@ -328,7 +328,7 @@ a.chip{color:var(--ink);text-decoration:none}
 <div id="toast" class="toast" hidden></div>
 
 <script src="i18n.js"></script>
-<script src="firebase-config.js"></script>
+<script src="drive-config.js"></script>
 <script>
 (function(){
 "use strict";
@@ -625,8 +625,9 @@ function newSketch(){
 }
 
 /* ---------- storage ---------- */
-// Local copy is always the source of truth on this device. A "remote" (Claude artifact store or
-// Firebase) mirrors it when available. Local entries carry `cloud:<uid>` once Firebase confirmed them.
+// Local copy is always the source of truth on this device. Optional mirrors: the Claude artifact store, or the
+// user's own Google Drive (appDataFolder, see drive-sync.js). Edits and deletes not yet confirmed in Drive are
+// remembered in `pending`, and `owner` records which Google account the local data belongs to.
 const LS='sketcher.v1';
 const IS_TAURI=!!(window.__TAURI_INTERNALS__||window.__TAURI__);
 const IS_ANDROID=/android/i.test(navigator.userAgent||'');
@@ -698,8 +699,17 @@ const folder={
   stop(){ this.path=''; this.setMap({}); toast(tt("השמירה לתיקייה הופסקה. הקבצים שכבר נשמרו נשארים שם")); }
 };
 let syncSt='';
+// Which Google account the data on this device belongs to, and what has not reached Drive yet.
+const owner={K:'sirtuti.owner',get(){try{return localStorage.getItem(this.K)||''}catch(e){return ''}},set(v){try{v?localStorage.setItem(this.K,v):localStorage.removeItem(this.K)}catch(e){}}};
+const pending={K:'sirtuti.pending',
+  read(){try{return JSON.parse(localStorage.getItem(this.K)||'{}')||{}}catch(e){return {}}},
+  write(o){try{Object.keys(o).length?localStorage.setItem(this.K,JSON.stringify(o)):localStorage.removeItem(this.K)}catch(e){}},
+  mark(id,v){const o=this.read();o[id]=v;this.write(o);},
+  // clear only if no newer local change was made since (an edit made while the upload ran must still go out)
+  landed(id,v){const o=this.read(),p=o[id]; if(p&&p.k===v.k&&(v.k==='d'||p.t===v.t)){delete o[id];this.write(o);}}
+};
 const store={remote:null,
-  get mode(){return this.remote?this.remote.kind:'local'},
+  get mode(){return this.remote?this.remote.kind:(cloud.user?'drive':'local')},
   async initClaude(){
     try{
       if(!window.claude||!window.claude.use) return;
@@ -707,24 +717,23 @@ const store={remote:null,
       if(!user||!db) return; const id=await user.id(); if(!id) return;
       const col=()=>db.collection('data/users/'+id);
       this.remote={kind:'claude',uid:id,
-        list:async()=>({docs:(await col().get()).docs.map(d=>({id:d.id,...d.data()})),fromServer:true}),
+        list:async()=>({docs:(await col().get()).docs.map(d=>({id:d.id,...d.data()}))}),
         save:(sid,body)=>col().doc(sid).set(body),
         remove:sid=>col().doc(sid).delete()};
     }catch(e){}
   },
   async list(){
     if(folder.on()){try{await folder.pull();}catch(e){folder.fail();}}
+    if(cloud.user) await cloud.sync().catch(()=>{});
     const L=local.all(),all={};
     Object.values(L).forEach(s=>{if(s&&Array.isArray(s.shapes)) all[s.id]=s;});
     const r=this.remote;
     if(r){
       try{
-        const {docs,fromServer}=await r.list(),ids=new Set(docs.map(d=>d.id));
-        // deleted on another device: drop local copies that were confirmed in the cloud but are gone now
-        if(r.kind==='firebase'&&fromServer) Object.values(L).forEach(s=>{if(s.cloud===r.uid&&!ids.has(s.id)){local.del(s.id);delete all[s.id];}});
+        const {docs}=await r.list();
         docs.forEach(o=>{
           if(!Array.isArray(o.shapes)) return; const cur=all[o.id];
-          if(!cur||(cur.updated||0)<=(o.updated||0)){ all[o.id]=o; if(r.kind==='firebase') local.put({...o,cloud:r.uid}); }
+          if(!cur||(cur.updated||0)<=(o.updated||0)) all[o.id]=o;
         });
       }catch(e){}
     }
@@ -734,28 +743,24 @@ const store={remote:null,
     const body=plain(s),prev=local.all()[s.id];
     local.put({...(prev||{}),id:s.id,...body});
     if(folder.on()) folder.write({id:s.id,...body}).catch(()=>folder.fail());
+    if(owner.get()) cloud.push({id:s.id,...body});   // never blocks on the network: works offline, syncs later
     const r=this.remote; if(!r) return;
-    if(r.kind==='claude'){ await r.save(s.id,body); return; }
-    pushCloud(r,s.id,body);   // Firebase: never block on the server (works offline, syncs later)
+    if(r.kind==='claude') await r.save(s.id,body);
   },
   async remove(id){
-    local.del(id); if(folder.on()) folder.remove(id); const r=this.remote; if(!r) return;
-    const p=r.remove(id); if(r.kind==='claude') await p; else p.catch(()=>{});
+    local.del(id); if(folder.on()) folder.remove(id);
+    if(owner.get()) cloud.drop(id);
+    const r=this.remote; if(!r) return;
+    await r.remove(id);
   }
 };
-function pushCloud(r,id,body){
-  setSync('pending');
-  r.save(id,body).then(()=>{
-    const cur=local.all()[id]; if(cur&&cur.updated===body.updated){cur.cloud=r.uid;local.put(cur);}
-    if(store.remote===r) setSync('ok');
-  }).catch(()=>{ if(store.remote===r) setSync('err'); });
-}
 function setSync(st){ syncSt=st; if(!saving&&!saveT&&!sk.example) setStatus(savedText()); }
 let saveT=null,saving=false,again=false;
 function setStatus(t){$('#status').textContent=t;}
 function savedText(){
   if(store.mode==='claude') return tt("נשמר בחשבון שלך");
-  if(store.mode==='firebase') return syncSt==='pending'?tt("נשמר · מסנכרן ל-Google…"):syncSt==='err'?tt("נשמר במכשיר · הסנכרון ל-Google נכשל"):tt("נשמר בחשבון Google");
+  if(cloud.user) return syncSt==='pending'?tt("נשמר · מסנכרן ל-Drive…"):syncSt==='err'?tt("נשמר במכשיר · הסנכרון ל-Drive נכשל"):tt("נשמר ב-Google Drive שלך");
+  if(owner.get()) return tt("נשמר במכשיר · לא מחובר ל-Drive");
   return IS_TAURI?(folder.on()?tt("נשמר במחשב ובתיקייה"):tt("נשמר במחשב הזה")):tt("נשמר בדפדפן הזה");
 }
 function scheduleSave(){
@@ -770,79 +775,170 @@ async function doSave(){
   if(again){again=false;doSave();}
 }
 
-/* ---------- Google account (Firebase) ---------- */
-const cloud={fb:null,auth:null,fs:null,user:null,failed:false,
-  configured(){const c=window.SIRTUTI_FIREBASE;return !!(c&&c.apiKey)&&!IS_TAURI&&!window.claude;},
+/* ---------- Google Drive account (optional sync) ---------- */
+// The sync module is only downloaded once the user has used it (or opens the account dialog), so people who
+// never sign in never contact Google. Client ID: web/drive-config.js (empty = the account button stays hidden).
+const cloud={d:null,user:null,failed:false,lastSync:0,syncing:null,gen:0,busy:false,retryT:null,
+  configured(){return !!window.SIRTUTI_GOOGLE_CLIENT_ID&&!IS_TAURI&&!window.claude;},
   async init(){
     if(!this.configured()) return;
-    $('#acctBtn').hidden=false;
-    try{
-      const fb=await import('./vendor/firebase.js'); this.fb=fb;
-      const app=fb.initializeApp(window.SIRTUTI_FIREBASE);
-      this.auth=fb.getAuth(app);
-      try{this.fs=fb.initializeFirestore(app,{localCache:fb.persistentLocalCache({tabManager:fb.persistentMultipleTabManager()})});}
-      catch(e){this.fs=fb.initializeFirestore(app,{});}
-      fb.getRedirectResult(this.auth).catch(e=>toast(authErr(e)));
-      fb.onAuthStateChanged(this.auth,u=>this.onUser(u));
-    }catch(e){ this.failed=true; console.warn('Firebase unavailable',e); }
+    $('#acctBtn').hidden=false; updAcct();
+    let had=false; try{had=!!localStorage.getItem('sirtuti.drive.session')||!!owner.get();}catch(e){}
+    if(had) await this.load();
   },
-  col(uid){return this.fb.collection(this.fs,'users',uid,'sketches');},
-  async onUser(u){
-    this.user=u; updAcct();
-    if(!u){ if(store.mode==='firebase'){store.remote=null;syncSt='';if(!sk.example)setStatus(savedText());} return; }
-    const fb=this.fb,id=u.uid,col=()=>this.col(id);
-    const r={kind:'firebase',uid:id,
-      list:async()=>{let snap,fromServer=true;
-        try{snap=await fb.getDocsFromServer(col());}catch(e){snap=await fb.getDocs(col());fromServer=false;}
-        return {docs:snap.docs.map(d=>({id:d.id,...d.data()})),fromServer};},
-      save:(sid,body)=>fb.setDoc(fb.doc(col(),sid),body),
-      remove:sid=>fb.deleteDoc(fb.doc(col(),sid))};
-    store.remote=r;
-    // upload sketches that so far exist only on this device
+  async load(){
+    if(this.d) return this.d;
     try{
-      const {docs}=await r.list(),cm={}; docs.forEach(d=>cm[d.id]=d);
-      Object.values(local.all()).forEach(s=>{ if(s.cloud===id) return; const c=cm[s.id];
-        if(!c||(c.updated||0)<(s.updated||0)) pushCloud(r,s.id,plain(s)); });
-    }catch(e){}
-    const list=(await store.list()).filter(x=>!isProj(x));
-    if(sk.example&&undoS.length===0&&list.length) openSketch(clone(list[0]));
-    else if(!sk.example){ store.save(sk); setStatus(savedText()); }
+      const m=await import('./drive-sync.js'); this.errCode=m.signInErrorCode;
+      this.d=m.createDriveSync({clientId:window.SIRTUTI_GOOGLE_CLIENT_ID});
+      this.d.onAuthChange(u=>this.onUser(u));
+    }catch(e){ this.failed=true; }
+    return this.d;
+  },
+  async onUser(u){
+    const was=this.user; this.user=u; updAcct();
+    if(!u){ if(was){ syncSt=''; if(!sk.example) setStatus(savedText()); } return; }
+    // Data that belongs to a different Google account is discarded, never merged into this one.
+    if(owner.get()&&owner.get()!==u.uid) await this.wipe();
+    owner.set(u.uid);
+    await this.sync(true).catch(()=>{});
+    if(!sk.example) setStatus(savedText());
+  },
+  // upload one sketch; the edit stays in `pending` until Drive confirms it
+  push(item){
+    if(this.busy) return Promise.resolve();
+    pending.mark(item.id,{k:'u',t:item.updated});
+    if(!this.user) return Promise.resolve();
+    setSync('pending');
+    return this.d.upsert(item).then(()=>{ pending.landed(item.id,{k:'u',t:item.updated}); setSync('ok'); }).catch(()=>this.failed1());
+  },
+  drop(id){
+    if(this.busy) return Promise.resolve();
+    pending.mark(id,{k:'d'});
+    if(!this.user) return Promise.resolve();
+    return this.d.remove(id).then(()=>pending.landed(id,{k:'d'})).catch(()=>this.failed1());
+  },
+  // a failed upload is retried on its own (otherwise it waits for the next focus or list)
+  failed1(){ setSync('err'); if(!this.retryT) this.retryT=setTimeout(()=>{ this.retryT=null; this.sync(true).catch(()=>{}); },30000); },
+  // forget this device's data without saving anything first: pending saves are cancelled, an in-flight sync is voided
+  async wipe(){
+    this.busy=true; this.gen++;
+    try{
+      clearTimeout(saveT); saveT=null; clearTimeout(docSaveT); docSaveT=null;
+      for(let i=0;i<40&&saving;i++) await new Promise(r=>setTimeout(r,50));
+      doc=null; docv.hidden=true; setView(''); docReturn=null; $('#backDoc').hidden=true;
+      const o=local.read(); o.sketches={}; local.write(o); pending.write({});
+      openSketch(sampleSketch());
+    }finally{ this.busy=false; }
+  },
+  // Pull everything from Drive and merge: edits not yet uploaded win over Drive's copy, local deletes are replayed,
+  // and ids Drive says were deleted elsewhere are dropped here.
+  sync(force){
+    if(!this.d||!this.user) return Promise.resolve();
+    if(this.syncing) return this.syncing;
+    if(!force&&Date.now()-this.lastSync<20000) return Promise.resolve();
+    const gen=this.gen;
+    this.syncing=(async()=>{
+      try{
+        setSync('pending');
+        const rem=await this.d.loadAll();
+        if(gen!==this.gen||this.busy) return;   // the device was wiped or switched account meanwhile: this answer is stale
+        const L=local.all(),P=pending.read(),remote=new Map(rem.items.map(o=>[o.id,o]));
+        let changed=false;
+        rem.items.forEach(o=>{
+          if(!Array.isArray(o.shapes)||P[o.id]) return; const c=L[o.id];
+          if(!c||(c.updated||0)<(o.updated||0)){ local.put({...o}); changed=true; }
+        });
+        rem.deletedIds.forEach(id=>{ const p=P[id]; if(L[id]&&!(p&&p.k==='u')){ local.del(id); changed=true; } });
+        const jobs=[];
+        Object.values(local.all()).forEach(x=>{
+          if(!x||!Array.isArray(x.shapes)) return; const o=remote.get(x.id),p=P[x.id]; if(p&&p.k==='d') return;
+          if((p&&p.k==='u')||!o||(o.updated||0)<(x.updated||0)) jobs.push(this.push({id:x.id,...plain(x)}));
+        });
+        Object.keys(P).forEach(id=>{ if(P[id].k==='d') jobs.push(this.drop(id)); });
+        await Promise.all(jobs);
+        this.lastSync=Date.now(); setSync('ok');
+        if(changed) afterRemoteSync();
+      }catch(e){ if(this.user) this.failed1(); throw e; }
+      finally{ this.syncing=null; }
+    })();
+    return this.syncing;
   },
   async signIn(){
-    if(!this.fb){toast(tt("אין חיבור ל-Google כרגע"));return;}
-    const p=new this.fb.GoogleAuthProvider(); p.setCustomParameters({prompt:'select_account'});
-    try{ await this.fb.signInWithPopup(this.auth,p); closeModal(); toast(tt("מחובר. הסקיצות יישמרו בחשבון Google")); }
+    const d=await this.load(); if(!d){toast(tt("אין חיבור ל-Google כרגע"));return;}
+    try{ await d.signIn(); closeModal(); toast(tt("מחובר. הסקיצות יישמרו ב-Google Drive שלך")); }
     catch(e){
-      const c=(e&&e.code)||'';
-      if(/popup-blocked|operation-not-supported/.test(c)) return this.fb.signInWithRedirect(this.auth,p);
-      if(/popup-closed|cancelled-popup/.test(c)) return;
-      toast(authErr(e));
+      const c=cloud.errCode?cloud.errCode(e):'failed';
+      if(c==='cancelled') return;
+      toast(c==='popup-blocked'?tt("החלון נחסם. אפשר חלונות קופצים לאתר ונסה שוב"):c==='offline'?tt("אין חיבור לאינטרנט"):c==='not-configured'?tt("הסנכרון ל-Drive לא הוגדר בגרסה הזו"):tt("ההתחברות נכשלה"));
     }
   },
-  async signOut(){ await this.fb.signOut(this.auth); closeModal(); toast(tt("התנתקת. הסקיצות נשארות גם במכשיר הזה")); }
+  // The device forgets the account and its data (it stays in the user's Drive); the next account starts clean.
+  // Edits still waiting for Drive are uploaded first (the dialog warns when that may not be possible).
+  async leave(){
+    try{ await flushSketch(); if(doc&&docSaveT) await saveDocNow(); await this.d.flushed(); await new Promise(r=>setTimeout(r,0)); }catch(e){}
+    await this.d.signOut(); await this.forget();
+  },
+  async forget(){
+    this.busy=true; this.gen++; owner.set(''); this.user=null; this.lastSync=0; syncSt=''; updAcct();
+    this.busy=false; await this.wipe();
+  }
 };
-function authErr(e){
-  const c=(e&&e.code)||'';
-  if(c.includes('unauthorized-domain')) return tt("הכתובת הזו לא מאושרת ב-Firebase (Authorized domains)");
-  if(c.includes('network')) return tt("אין חיבור לאינטרנט");
-  return tt("ההתחברות נכשלה");
+// After a sync changed local data, bring what is on screen up to date, so the next save cannot overwrite another
+// device's newer work. Waits while the user is mid-edit.
+function afterRemoteSync(tries=0){
+  const typing=/INPUT|TEXTAREA/.test((document.activeElement||{}).tagName||'');
+  const busy=saveT||saving||docSaveT||(act&&act.type!=='none')||typing;
+  const L=local.all(),cur=L[sk.id],pd=doc?L[doc.id]:null;
+  const skBehind=!sk.example&&cur&&(cur.updated||0)>(sk.updated||0),skGone=!sk.example&&!cur&&!saveT&&!saving;
+  const docBehind=doc&&pd&&(pd.updated||0)>(doc.updated||0),docGone=doc&&!pd&&!docSaveT;
+  if(sk.example){ const l=Object.values(L).filter(x=>!isProj(x)&&Array.isArray(x.shapes)).sort((a,b)=>(b.updated||0)-(a.updated||0)); if(l[0]&&!busy&&!undoS.length) openSketch(clone(l[0])); return; }
+  if(!(skBehind||skGone||docBehind||docGone)) return;
+  if(busy){ if(tries<10) setTimeout(()=>afterRemoteSync(tries+1),1500); return; }
+  if(docBehind) openDoc(clone(pd));
+  else if(docGone){ docv.hidden=true; doc=null; setView(''); }
+  if(skBehind) openSketch(clone(cur));
+  else if(skGone){ const l=Object.values(L).filter(x=>!isProj(x)&&Array.isArray(x.shapes)).sort((a,b)=>(b.updated||0)-(a.updated||0)); openSketch(l[0]?clone(l[0]):sampleSketch()); }
+  toast(tt("עודכן ממכשיר אחר"));
 }
+// another tab of this browser signed in, out or switched account: this tab's in-memory state is stale
+window.addEventListener('storage',e=>{
+  if(e.key===owner.K){ location.reload(); return; }
+  if(e.key==='sirtuti.drive.session'){
+    let uid=null; try{uid=JSON.parse(e.newValue||'null')?.user?.uid||null;}catch(_){}
+    if((uid||null)!==((cloud.user&&cloud.user.uid)||null)&&(uid||cloud.user)) location.reload();
+  }
+});
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&cloud.user) cloud.sync().catch(()=>{}); });
 function updAcct(){
   const b=$('#acctBtn'),u=cloud.user; b.classList.toggle('on',!!u);
-  b.title=u?(tt("מחובר: ")+(u.email||'')):tt("התחברות לחשבון Google");
+  b.title=u?(tt("מחובר: ")+(u.email||'')):(owner.get()?tt("החיבור ל-Drive פג. לחץ להתחברות מחדש"):tt("התחברות לחשבון Google"));
 }
 function showAcct(){
   const u=cloud.user,x=`<button class="ib" data-close aria-label="${esc(tt("סגירה"))}">${ic('x')}</button>`;
-  if(u) modal(`<h2>${tt("חשבון Google")}${x}</h2>
+  if(u){
+    modal(`<h2>${tt("חשבון Google")}${x}</h2>
     <div class="acct"><b>${esc(u.displayName||'')}</b><span dir="ltr">${esc(u.email||'')}</span></div>
-    <div class="hint">${tt("הסקיצות נשמרות בחשבון שלך ומסתנכרנות בין כל המכשירים שמחוברים אליו. גם בלי אינטרנט אפשר לעבוד, והסנכרון ישלים כשיחזור החיבור.")}</div>
-    <div class="btnrow"><button class="chip" id="signOut">${tt("התנתקות")}</button></div>`);
-  else modal(`<h2>${tt("חשבון Google")}${x}</h2>
-    <div class="hint" style="font-size:14.5px">${tt("התחבר כדי לשמור את הסקיצות בחשבון Google שלך ולפתוח אותן מכל מכשיר. בלי התחברות הן נשמרות רק")} ${IS_TAURI?tt("במחשב הזה"):tt("בדפדפן הזה")}.</div>
+    <div class="hint">${tt("הסקיצות נשמרות בתיקייה נסתרת ב-Google Drive שלך, ורק האפליקציה הזו יכולה לקרוא אותה. אין לנו שרת ואין לנו גישה אליהן. הן מסתנכרנות בין המכשירים שמחוברים לאותו חשבון, וגם בלי אינטרנט אפשר לעבוד.")}</div>
+    <div class="btnrow"><button class="chip" id="signOut">${tt("התנתקות")}</button><button class="chip danger" id="delAll">${tt("מחיקת כל הנתונים שלי מ-Drive")}</button></div>
+    <div class="hint"><a href="https://joka-7.github.io/Sirtuti/privacy.html" target="_blank" rel="noopener" data-ext="1">${tt("מדיניות פרטיות")}</a></div>`);
+    const armed=(b,txt,run)=>b.onclick=async()=>{ if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent=txt; return; } b.disabled=true; await run(); };
+    const unsynced=Object.keys(pending.read()).length>0;
+    armed($('#signOut'),unsynced?tt("שינויים אחרונים עוד לא עלו ל-Drive ועלולים ללכת לאיבוד. לחץ שוב להתנתקות בכל זאת"):tt("לחץ שוב: הסקיצות יימחקו מהמכשיר הזה (הן נשארות ב-Drive)"),async()=>{ await cloud.leave(); closeModal(); toast(tt("התנתקת. הסקיצות נשארות ב-Google Drive שלך")); });
+    armed($('#delAll'),tt("לחץ שוב: מוחק את הסקיצות מ-Drive ומהמכשיר הזה"),async()=>{
+      try{ await cloud.d.deleteAllSyncedData(); await cloud.forget(); closeModal(); toast(tt("הנתונים נמחקו מ-Google Drive ומהמכשיר הזה")); }
+      catch(e){ $('#delAll').disabled=false; toast(tt("המחיקה נכשלה, נסה שוב")); }
+    });
+  }else{
+    modal(`<h2>${tt("חשבון Google")}${x}</h2>
+    <div class="hint" style="font-size:14.5px">${owner.get()?tt("החיבור ל-Google Drive פג. התחבר שוב כדי להמשיך לסנכרן. הסקיצות במכשיר נשמרות בינתיים."):tt("התחבר כדי לשמור את הסקיצות ב-Google Drive שלך ולפתוח אותן מכל מכשיר. הן נשמרות בתיקייה נסתרת שרק האפליקציה הזו קוראת, ואין לנו גישה אליהן. בלי התחברות הן נשמרות רק")+' '+(IS_TAURI?tt("במחשב הזה"):tt("בדפדפן הזה"))+'.'}</div>
     ${cloud.failed?tt("<div class=\"err\">לא ניתן להתחבר ל-Google כרגע. בדוק את החיבור לאינטרנט ונסה שוב.</div>"):''}
-    <div class="btnrow"><button class="primary" id="signIn">${tt("התחברות עם Google")}</button></div>`);
-  const si=$('#signIn'),so=$('#signOut');
-  if(si) si.onclick=()=>cloud.signIn(); if(so) so.onclick=()=>cloud.signOut();
+    <div class="btnrow"><button class="primary" id="signIn" disabled>${tt("התחברות עם Google")}</button></div>
+    <div class="hint"><a href="https://joka-7.github.io/Sirtuti/privacy.html" target="_blank" rel="noopener" data-ext="1">${tt("מדיניות פרטיות")}</a></div>`);
+    // Google's script is loaded now, so the click can open the popup synchronously (browsers block it otherwise)
+    cloud.load().then(d=>d&&d.preload()).then(()=>{ const b=$('#signIn'); if(b) b.disabled=false; });
+    $('#signIn').onclick=()=>cloud.signIn();
+  }
 }
 
 /* ---------- history ---------- */
@@ -1281,7 +1377,7 @@ async function showList(){
      <button class="chip danger" data-delsk="${s.id}" aria-label="${esc(tt("מחיקת סקיצה"))}">${ic('trash')}</button></div>`).join('')+`</div>
    ${folder.supported()?`<div class="fold"><b>${tt("שמירה אוטומטית לתיקייה")}</b>${folder.path?`<span dir="ltr" class="fpath">${esc(folder.path)}</span><div class="btnrow" style="margin-top:6px"><button class="chip" id="fdPick">${tt("החלפת תיקייה")}</button><button class="chip" id="fdStop">${tt("הפסקה")}</button></div>`:`<span>${tt("כל סקיצה תישמר גם כקובץ בתיקייה שתבחר, ותתעדכן בכל שינוי. בחר תיקייה של Google Drive, OneDrive או Dropbox כדי לקבל גיבוי בענן.")}</span><div class="btnrow" style="margin-top:6px"><button class="primary" id="fdPick">${tt("בחירת תיקייה")}</button></div>`}</div>`:''}
    <div class="btnrow"><button class="primary" id="newSk">${tt("סקיצה חדשה")}</button><button class="chip" id="bkOut">${ic('dl')} ${tt("גיבוי לקובץ")}</button><button class="chip" id="bkIn">${tt("ייבוא מקובץ")}</button><button class="chip" id="setBtn">${ic('gear')} ${tt("הגדרות")}</button><button class="chip" id="dlApp">${ic('monitor')} ${IS_TAURI?tt("עדכונים"):tt("הורדת האפליקציה")}</button><input type="file" id="bkFile" accept=".json,application/json" hidden></div>
-   <div class="hint">${store.mode==='claude'?tt("הסקיצות נשמרות בחשבון שלך וזמינות מכל מכשיר."):store.mode==='firebase'?tt("הסקיצות נשמרות בחשבון Google שלך ומסתנכרנות בין המכשירים."):(IS_TAURI?tt("הסקיצות נשמרות במחשב הזה."):tt("הסקיצות נשמרות בדפדפן הזה בלבד."))+(cloud.configured()&&!cloud.user?tt(" התחבר לחשבון Google כדי לשמור אותן גם בענן."):tt(" קובץ גיבוי מאפשר להעביר אותן למכשיר אחר."))}</div>`);
+   <div class="hint">${store.mode==='claude'?tt("הסקיצות נשמרות בחשבון שלך וזמינות מכל מכשיר."):store.mode==='drive'?tt("הסקיצות נשמרות ב-Google Drive שלך ומסתנכרנות בין המכשירים."):(IS_TAURI?tt("הסקיצות נשמרות במחשב הזה."):tt("הסקיצות נשמרות בדפדפן הזה בלבד."))+(cloud.configured()&&!cloud.user?tt(" התחבר לחשבון Google כדי לשמור אותן גם בענן."):tt(" קובץ גיבוי מאפשר להעביר אותן למכשיר אחר."))}</div>`);
   if($('#fdPick')) $('#fdPick').onclick=async()=>{ if(await folder.choose()){ setStatus(savedText()); showList(); } };
   if($('#fdStop')) $('#fdStop').onclick=()=>{ folder.stop(); setStatus(savedText()); showList(); };
   $('#bkOut').onclick=()=>backupOut(all.filter(x=>!x.example));
